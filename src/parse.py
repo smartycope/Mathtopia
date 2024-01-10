@@ -114,7 +114,7 @@ def get_atoms(expr):
 
 def parse(text):
     #* If there's nothing there, it's okay
-    if not len(text):
+    if text is not None and not len(text):
         return
 
     #* Now calculate everything

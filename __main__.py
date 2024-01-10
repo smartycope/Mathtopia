@@ -12,6 +12,9 @@ if 'prev_id' not in st.session_state:
     st.session_state['prev_id'] = -1
 if 'solution' not in st.session_state:
     st.session_state['solution'] = None
+# If we DO have it, and it's none, make it '', as well as if we don't have it
+if st.session_state.get('_expr') is None:
+    st.session_state['_expr'] = ''
 
 with st.sidebar:
     remove_fx = st.checkbox('Auto-Remove `f(x) =`', key='remove_fx')
