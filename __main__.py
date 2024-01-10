@@ -28,7 +28,7 @@ with st.sidebar:
         copy_expression_repr = st.button('Expression Representation', key='copy_expression_repr')
         copy_solution_repr = st.button('Solution Representation', key='copy_solution_repr')
 
-expr = parse(st.text_area('Expression:', key='_expr'))
+expr = parse(st.text_input('Expression:', '' if (cur := st.session_state.get('_expr')) is None else cur, key='_expr'))
 # Save the parsed sympy expression, just in case we need it elsewhere
 st.session_state['expr'] = expr
 
@@ -37,7 +37,7 @@ if expr is not None:
     f"Parsed as: `{expr}`"
 
     vars = get_atoms(expr)
-    var = st.selectbox('Selected Variable:', vars)
+    var = st.selectbox('Selected Variable:', vars, key='selected_var')
 
     # Display the catagories
     if do_categorize and len(vars) == 1:

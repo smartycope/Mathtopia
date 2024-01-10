@@ -1,6 +1,5 @@
 import streamlit as st
 from sympy import *
-from clipboard import copy
 
 
 end = st.text_input('End')
