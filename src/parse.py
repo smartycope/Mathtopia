@@ -60,6 +60,9 @@ def _sanatizeInput(eq:str):
     return eq
 
 def get_atoms(expr):
+    return list(filter(lambda i: isinstance(i, Symbol), expr.atoms()))
+
+    # Old code that works, but I feel like the above line is better
     atoms = set()
 
     if st.session_state.get_vars_from_vars:
@@ -94,23 +97,23 @@ def get_atoms(expr):
     return atoms
 
 # def updateVars(expr):
-#     atoms = _getAtoms(expr)
+    # atoms = _getAtoms(expr)
 
-#     #* Get all the things in atoms that aren't already in self.vars and add them
-#     # Get a set of the symbols in self.vars
-#     curSymbols = set([v.symbol for v in self.vars])
-#     for s in atoms.difference(curSymbols):
-#         # If it's likely a unit, fill it with that first
-#         self.vars.append(Variable(s))
+    # #* Get all the things in atoms that aren't already in self.vars and add them
+    # # Get a set of the symbols in self.vars
+    # curSymbols = set([v.symbol for v in self.vars])
+    # for s in atoms.difference(curSymbols):
+    #     # If it's likely a unit, fill it with that first
+    #     self.vars.append(Variable(s))
 
-#     #* Now get all the things in self.vars that aren't in atoms and delete them
-#     if not self.options.rememberVarNames.isChecked():
-#         for s in curSymbols.difference(atoms):
-#             del self.vars[getIndexWith(self.vars, lambda x: x.symbol == s)]
+    # #* Now get all the things in self.vars that aren't in atoms and delete them
+    # if not self.options.rememberVarNames.isChecked():
+    #     for s in curSymbols.difference(atoms):
+    #         del self.vars[getIndexWith(self.vars, lambda x: x.symbol == s)]
 
-#     #* Double check that this is a set, and not a list (no duplicates)
-#     # But varHandler wants a list, I guess
-#     self.vars = sorted(list(set(self.vars)), key=lambda var: var.name)
+    # #* Double check that this is a set, and not a list (no duplicates)
+    # # But varHandler wants a list, I guess
+    # self.vars = sorted(list(set(self.vars)), key=lambda var: var.name)
 
 def parse(text):
     #* If there's nothing there, it's okay

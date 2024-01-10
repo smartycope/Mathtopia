@@ -6,7 +6,8 @@ from Cope import ensure_not_iterable
 from Cope.sympy import *
 from clipboard import copy
 from code_editor import code_editor
-# st.set_page_config(initial_sidebar_state='expanded')
+
+st.set_page_config(layout='wide')
 
 if 'prev_id' not in st.session_state:
     st.session_state['prev_id'] = -1
@@ -35,12 +36,13 @@ expr = parse(st.text_input('Expression:', '' if (cur := st.session_state.get('_e
 # Save the parsed sympy expression, just in case we need it elsewhere
 st.session_state['expr'] = expr
 
+
 # Do all the things
 if expr is not None:
     f"Parsed as: `{expr}`"
 
     vars = get_atoms(expr)
-    var = st.selectbox('Selected Variable:', vars, key='selected_var')
+    var = st.columns([.2, .8])[0].selectbox('Selected Variable:', vars, key='selected_var')
 
     # Display the catagories
     if do_categorize and len(vars) == 1:
@@ -74,6 +76,7 @@ if expr is not None:
             solution = solve(expr, var)
         copy(srepr(ensure_not_iterable(solution)))
 
+    # Code box
     left, right = st.columns(2)
     with left:
         code_tab, output_tab, errors_tab = st.tabs(('Code', 'Output', 'Errors'))
