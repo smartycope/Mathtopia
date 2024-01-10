@@ -34,7 +34,6 @@ r.markdown('Condition')
 
 states = []
 for i in range(len(st.session_state.states) + 1):
-    print('looping')
     l, m, r = right.columns((.45, .1, .45))
     expr = l.text_input(' ', label_visibility='hidden', key=f'{i}_expr')
     m.markdown('# for')
