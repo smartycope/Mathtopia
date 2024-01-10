@@ -18,9 +18,6 @@ repl = '(' + rgroup('a') + ' ' + rgroup('op1') + ' ' + rgroup('b') + ') & (' + r
 def _parse_interval(condition):
     return re.sub(interval.str(), repl.str(), condition, count=1)
 
-
-
-
 # 3 lists (expr, for, condition) of length 1 more than we have already
 # _grid = grid(1, *([[1]*(len(st.session_state.states) + 1)]*3), vertical_align='center')
 left, right = st.columns([.2, .8])

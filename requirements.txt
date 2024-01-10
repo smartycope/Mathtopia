@@ -4,3 +4,4 @@ streamlit_extras
 streamlit_code_editor
 sympy
 ezregex
+clipboard
