@@ -60,6 +60,7 @@ def _sanatizeInput(eq:str):
     return eq
 
 def get_atoms(expr):
+    # return sorted(list(filter(lambda i: isinstance(i, Symbol), expr.atoms())), reverse=False, key=str)
     return list(filter(lambda i: isinstance(i, Symbol), expr.atoms()))
 
     # Old code that works, but I feel like the above line is better
