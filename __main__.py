@@ -1,10 +1,17 @@
 import streamlit as st
 from sympy import *
 from src.parse import parse, get_atoms
+from src.code import run_code
 from Cope import ensure_not_iterable
 from Cope.sympy import *
 from clipboard import copy
+from code_editor import code_editor
 # st.set_page_config(initial_sidebar_state='expanded')
+
+if 'prev_id' not in st.session_state:
+    st.session_state['prev_id'] = -1
+if 'solution' not in st.session_state:
+    st.session_state['solution'] = None
 
 with st.sidebar:
     remove_fx = st.checkbox('Auto-Remove `f(x) =`', key='remove_fx')
@@ -32,12 +39,15 @@ if expr is not None:
     vars = get_atoms(expr)
     var = st.selectbox('Selected Variable:', vars)
 
+    # Display the catagories
     if do_categorize and len(vars) == 1:
         f'Catagories: `{tuple(categorize(expr, list(vars)[0]))}`'
 
+    # Display the solutions
     if do_solve:
         with st.expander('Solutions', True):
             solution = solve(expr, var)
+            st.session_state['solution'] = solution
             for i in solution:
                 st.write(i)
 
@@ -60,3 +70,14 @@ if expr is not None:
         if not do_solve:
             solution = solve(expr, var)
         copy(srepr(ensure_not_iterable(solution)))
+
+    left, right = st.columns(2)
+    with left:
+        code_tab, output_tab, errors_tab = st.tabs(('Code', 'Output', 'Errors'))
+        with code_tab:
+            resp = code_editor('' if (cur := st.session_state.get('code')) is None else cur['text'], lang='python', key='code')
+            code = resp['text']
+            id = resp['id']
+            if id != st.session_state.prev_id:
+                rtn = right.container(border=True)
+                run_code(code, rtn, output_tab, errors_tab)

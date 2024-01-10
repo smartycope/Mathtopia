@@ -11,13 +11,14 @@ var = left.text_input('Variable')
 mid.markdown('# =')
 start = right.text_input('Start')
 
-if st.button('Copy to Clipboard'):
-    if not len(var):
-        st.toast('Variable not specified')
-    elif not len(end):
-        st.toast('End not specified')
-    elif not len(start):
-        st.toast('Start not specified')
-    else:
-        copy(f'Sum({var}, ({var}, {start}, {end}))')
-        st.toast('Copied!')
+if not len(var):
+    st.toast('Variable not specified')
+elif not len(end):
+    st.toast('End not specified')
+elif not len(start):
+    st.toast('Start not specified')
+else:
+    st.divider()
+    'Copy this into the main equation:'
+    st.code(f'Sum({var}, ({var}, {start}, {end}))')
+        # st.toast('Copied!')
