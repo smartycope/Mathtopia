@@ -33,8 +33,7 @@ if expr is not None:
     var = st.selectbox('Selected Variable:', vars)
 
     if do_categorize and len(vars) == 1:
-        'Catagories:'
-        st.write(categorize(expr, list(vars)[0]))
+        f'Catagories: `{tuple(categorize(expr, list(vars)[0]))}`'
 
     if do_solve:
         with st.expander('Solutions', True):
