@@ -78,7 +78,6 @@ if expr is not None:
     if do_solve:
         with st.expander('Solutions', True):
             solution = solve(expr, var)
-            print(solution)
             st.session_state['solution'] = solution
             if not len(solution):
                 st.caption('Evaluated Directly')
@@ -93,7 +92,7 @@ if expr is not None:
     if do_code:
         left, right = st.columns(2)
         with left:
-            code_tab, output_tab, errors_tab = st.tabs(('Code', 'Output', 'Errors'))
+            code_tab, output_tab, errors_tab, help_tab = st.tabs(('Code', 'Output', 'Errors', 'Help'))
             with code_tab:
                 resp = code_editor('' if (cur := st.session_state.get('code')) is None else cur['text'], lang='python', key='code')
                 code = resp['text']
@@ -101,6 +100,21 @@ if expr is not None:
                 if id != st.session_state.prev_id:
                     rtn = right.container(border=True)
                     run_code(code, rtn, output_tab, errors_tab)
+
+            help_tab.markdown('''
+                ### In the code box, you can run sympy expressions directly on the current expression
+                The code box accepts valid Python, and has the following variables in scope:
+                - `expr`: The current expression. Is of type `Expr`
+                - `solution`: The current solutions. Is a list
+                - Everything in the default sympy scope, and sympy.abc
+                - Everything in the pages/funcs.py
+
+                print() statements should go to the Output tab, but they don't work yet.
+
+                Errors get handled and put in the Errors tab.
+
+                The last line in the box gets shown to the right (no need to print or set to a variable)
+            ''')
 
     # All the copy buttons
     if copy_expression:
