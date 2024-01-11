@@ -34,5 +34,5 @@ elif (func is not None and len(func) and var is not None and len(var)):
         left.code(result)
 
     if right.button('Overwrite Main Expression'):
-        st.session_state['_expr'] = result
+        st.session_state['set_expr'] = result
         switch_page('main ')

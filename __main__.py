@@ -66,7 +66,21 @@ with st.sidebar:
 
 _left, right = st.columns([.2, .95])
 _left.empty()
-expr = parse(right.text_input('Expression:', '' if (cur := st.session_state.get('_expr')) is None else cur, key='_expr'), interpret_as_latex)
+
+# if st.session_state.get('set_expr') is not None:
+#     _ex = st.session_state.get('set_expr')
+#     del st.session_state['set_expr']
+# elif st.session_state.get('_expr') is not None:
+#     _ex = st.session_state.get('_expr')
+# else:
+#     _ex = ''
+
+_ex = st.session_state.get('set_expr') or st.session_state.get('_expr') or ''
+# WHY is this necissary??
+st.session_state['_expr'] = _ex
+if 'set_expr' in st.session_state:
+    del st.session_state['set_expr']
+expr = parse(right.text_input('Expression:', value=_ex, key='_expr'), interpret_as_latex)
 
 # Do all the things
 if expr is not None:
@@ -96,7 +110,7 @@ if expr is not None:
         c.markdown('# ) =')
         eq = parse(d.text_input(' ', '0', label_visibility='hidden', key='eq'))
 
-    # Act diffrently if we have a matrix
+    # Matrix stuff
     if isinstance(expr, MatrixBase):
         # This is only relevant if we have a matrix
         do_check_point = do_check_point.checkbox('Check if a point is within the space of the matrix', key='do_check_point')
@@ -132,8 +146,6 @@ if expr is not None:
     copy_expression.code(str(expr))
     copy_expression_latex.code(latex(expr))
     copy_expression_repr.code(srepr(expr))
-
-    print(vars)
 
     # Display the solutions
     if do_solve and len(vars):

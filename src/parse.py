@@ -14,9 +14,9 @@ from sympy.parsing.latex import parse_latex
 from sympy.parsing import parse_expr
 import ezregex as er
 
-arrowRegex    = (er.group(er.chunk) + '->' + er.group(er.chunk)).compile()
-doubleEqRegex = (er.group(er.chunk) + '==' + er.group(er.chunk)).compile()
-eqRegex       = (er.group(er.chunk) + er.anyCharExcept('<>!=') + '=' + er.anyCharExcept('<>!=') + er.group(er.chunk)).compile()
+arrowRegex    = (er.group(er.chunk) + er.ow + '->' + er.ow + er.group(er.chunk)).compile()
+doubleEqRegex = (er.group(er.chunk) + er.ow + '==' + er.ow + er.group(er.chunk)).compile()
+eqRegex       = (er.group(er.chunk) + er.ow + er.anyCharExcept('<>!=') + '=' + er.anyCharExcept('<>!=') + er.ow + er.group(er.chunk)).compile()
 
 varTypes = (Symbol, Derivative, Function, Integral)
 funcTypes = (AppliedUndef, UndefinedFunction) #, Function, WildFunction)
@@ -52,8 +52,19 @@ def _sanatizeInput(eq:str):
     eq = re.sub(str(eRegex), 'E', eq)
 
     eq = re.subn(arrowRegex,    r'Lambda(\g<1>, \g<2>)', eq, 1)[0]
-    eq = re.subn(doubleEqRegex, r'Eq(\g<1>, \g<2>)',     eq, 1)[0]
-    eq = re.subn(eqRegex,       r'\g<2> - \g<1>', eq, 1)[0]
+
+    # These have the same groups, and shouldn't both be in the same equation (that doesn't make sense)
+    m = re.search(doubleEqRegex, eq) or re.search(eqRegex, eq)
+    if m is not None:
+        eq = m.group(1)
+        st.session_state['set_expr'] = m.group(1)
+        st.session_state['eq'] = m.group(2)
+        # Because this is being called parse(), which is being called just after
+        # we get the text from the user, rerun so it loads the updated text given here
+        st.rerun()
+
+    # eq = re.subn(eqRegex,       r'\g<2> - \g<1>', eq, 1)[0]
+    # eq = re.subn(doubleEqRegex, r'Eq(\g<1>, \g<2>)',     eq, 1)[0]
 
     # eq = re.sub((match('e') + optional(ifPrecededBy(digit())) + ifNotFollowedBy(anyAlphaNum()) + ifNotPrecededBy(alpha())).str(), 'E', eq)
 

@@ -44,7 +44,7 @@ result = result[:-1]
 result += '])'
 left.code(result)
 if right.button('Overwrite Main Expression'):
-    st.session_state['_expr'] = result
+    st.session_state['set_expr'] = result
     switch_page('main ')
 
 # st.dataframe(matrix2numpy(parse(result)), hide_index=False)

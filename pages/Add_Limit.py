@@ -7,7 +7,7 @@ st.session_state['_expr'] = st.session_state.get('_expr')
 
 _, left, right = st.columns([.4, .1, .5])
 left.markdown('# lim')
-expr = right.text_input('expr', st.session_state.get('_expr'))
+expr = right.text_input('Expression', st.session_state.get('_expr'))
 
 left, mid, right = st.columns((.45, .1, .45))
 var = left.text_input('Var', st.session_state.vars[0] if len(st.session_state.vars) == 1 else '')
@@ -21,5 +21,5 @@ if len(expr) and len(to) and len(var):
     result = f'Limit({expr}, {var}, {to}, "{dir[2]}")'
     left.code(result)
     if right.button('Overwrite Main Expression'):
-        st.session_state['_expr'] = result
+        st.session_state['set_expr'] = result
         switch_page('main ')
