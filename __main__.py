@@ -34,7 +34,7 @@ with st.sidebar:
     do_solve = st.checkbox('Solve', key='do_solve', value=True)
     do_simplify = st.checkbox('Simplify Solution', key='do_simplify', value=True)
     num_eval = st.checkbox('Give a non-symbolic answer', key='num_eval')
-    do_check_point = st.checkbox('If Expression is a Matrix, check if a point is within the space of the matrix', key='do_check_point')
+    do_check_point = st.empty()
     do_code = st.checkbox('Include Custom Code Box', key='do_code', value=True)
     if num_eval:
         do_round = st.number_input('Round to:', format='%d', value=3, key='do_round')
@@ -143,7 +143,11 @@ if expr is not None:
         c.markdown('# ) =')
         eq = parse(d.text_input(' ', '0', label_visibility='hidden', key='eq'))
 
+    # Act diffrently if we have a matrix
     if isinstance(expr, MatrixBase):
+        # This is only relevant if we have a matrix
+        do_check_point = do_check_point.checkbox('Check if a point is within the space of the matrix', key='do_check_point')
+
         # RREF
         "Row Reduction:"
         rref, pivots = expr.rref()
