@@ -131,10 +131,17 @@ def parse(text):
 
     # Actually parse the expression (but don't solve it yet!)
     # expr = parse_expr(sanatized, transformations=st.session_state.transformation, evaluate=False)
-    expr = parse_expr(sanatized, evaluate=False)
+    trans = (convert_xor, lambda_notation) + standard_transformations
+    if st.session_state.impl_mul:
+        trans += (implicit_multiplication,)
+    try:
+        expr = parse_expr(sanatized, evaluate=False, transformations=trans)
+    except Exception as err:
+        st.markdown('#### Invalid syntax in expression')
+        st.exception(err)
+    else:
+        # See if we need to remove one side of the equation
+        if st.session_state.remove_fx and isinstance(expr, Eq):
+            expr = expr.rhs
 
-    # See if we need to remove one side of the equation
-    if st.session_state.remove_fx and isinstance(expr, Eq):
-        expr = expr.rhs
-
-    return expr
+        return expr

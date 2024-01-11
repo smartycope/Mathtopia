@@ -8,10 +8,13 @@ def formatInput2code(s):
     # keywords = set(dir(builtins) + dir(er) + re.findall((lineStart + group(word) + ifFollowedBy(ow + '=')).str(), s))
     # print(anyExcept(anyof(*keywords), type='.*'))
     # s = re.sub((anyExcept('literal', type='.*')).str(), '"' + replace_entire.str() + '"', s)
+    if not len(s):
+        return ''
     lines = s.splitlines()
     # Remove the last lines which are actually comments
-    while s.splitlines()[-1].strip().startswith('#'):
-        lines.pop(-1)
+    if len(lines) > 1:
+        while s.splitlines()[-1].strip().startswith('#'):
+            lines.pop(-1)
     # Insert the variable assignment to the last line
     lines.append('\n_rtn = '  + lines.pop(-1))
     return '\n'.join(lines)

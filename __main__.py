@@ -29,9 +29,9 @@ with st.sidebar:
     transformation = st.checkbox('Transform', key='transformation')
     get_vars_from_vars = st.checkbox('Get variables from set variables', key='get_vars_from_vars')
     do_solve = st.checkbox('Solve for the Selected Variable', key='do_solve', value=True)
-    do_categorize = st.checkbox('Catagorize the Expression', key='do_categorize', value=True)
     do_code = st.checkbox('Include Custom Code Box', key='do_code', value=True)
     do_simplify = st.checkbox('Simplify Solution', key='do_simplifiy', value=True)
+    impl_mul = st.checkbox('Implicit Multiplication', key='impl_mul', value=True)
 
     with st.expander('Copy'):
         left, right = st.columns(2)
@@ -62,17 +62,20 @@ def _solve(expr, var):
         expr = simplify(expr)
     return solve(expr, var)
 
-
 # Do all the things
 if expr is not None:
-    f"Parsed as: `{expr}`"
-
-    # The Selected Variable
-    left, right = st.columns([.3, .7])
     vars = get_atoms(expr)
-    var = left.selectbox('Solve for:', vars, key='selected_var')
 
-    # The f(x) variable setter
+    # Show expr
+    st.write(expr)
+
+    # Top captions
+    left, right = st.columns((.65, .35))
+    left.caption(f"Parsed as: `{expr}`")
+    if len(vars) == 1:
+        right.caption(f'Catagories: `{tuple(categorize(expr, list(vars)[0]))}`')
+
+    # The f(inputs) box
     a, *b, c = st.columns([.05] + ([.9/len(vars)]*len(vars)) + [.05])
     a.markdown('# f(')
     for s, v in zip(b, vars):
@@ -93,27 +96,28 @@ if expr is not None:
     copy_expression_latex.code(latex(expr))
     copy_expression_repr.code(srepr(expr))
 
+    # Solve for box
+    left, right = st.columns([.3, .7])
+    var = left.selectbox('Solve for:', vars, key='selected_var')
 
     # Display the catagories
-    if do_categorize and len(vars) == 1:
-        f'Catagories: `{tuple(categorize(expr, list(vars)[0]))}`'
-
-    # Display the solutions
-    if do_solve:# or copy_solution or copy_solution_latex or copy_expression_repr:
-        with st.expander('Solutions', True):
-            solution = solve(expr, var)
-            st.session_state['solution'] = solution
-            if not len(solution):
-                st.caption('Evaluated Directly')
-                st.write(expr)
-            else:
-                for i in solution:
-                    st.write(i)
-                    if i != solution[-1]:
-                        st.divider()
-        copy_solution.code(str(ensure_not_iterable(solution)))
-        copy_solution_latex.code(latex(ensure_not_iterable(solution)))
-        copy_solution_repr.code(srepr(ensure_not_iterable(solution)))
+    with right:
+        # Display the solutions
+        if do_solve:# or copy_solution or copy_solution_latex or copy_expression_repr:
+            with st.expander('Solutions', True):
+                solution = solve(expr, var)
+                st.session_state['solution'] = solution
+                if not len(solution):
+                    st.caption('Evaluated Directly')
+                    st.write(expr)
+                else:
+                    for i in solution:
+                        st.write(i)
+                        if i != solution[-1]:
+                            st.divider()
+            copy_solution.code(str(ensure_not_iterable(solution)))
+            copy_solution_latex.code(latex(ensure_not_iterable(solution)))
+            copy_solution_repr.code(srepr(ensure_not_iterable(solution)))
 
     # Code box
     if do_code:
@@ -141,6 +145,8 @@ if expr is not None:
                 Errors get handled and put in the Errors tab.
 
                 The last line in the box gets shown to the right (no need to print or set to a variable)
+
+                Don't forget to hit ctrl+enter to submit the code to be run
             ''')
 
 else:
