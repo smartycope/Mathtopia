@@ -151,13 +151,17 @@ def parse(text, manual_latex=False) -> Expr:
 
     sanatized = _sanatizeInput(text)
 
+    # Because we're including locals in the parsing, parse these too
+    i = I
+    e = E
+
     # Actually parse the expression (but don't solve it yet!)
     # expr = parse_expr(sanatized, transformations=st.session_state.transformation, evaluate=False)
     trans = (convert_xor, lambda_notation) + standard_transformations
     if st.session_state.impl_mul:
         trans += (implicit_multiplication,)
     try:
-        expr = parse_expr(sanatized, evaluate=False, transformations=trans)
+        expr = parse_expr(sanatized, evaluate=False, transformations=trans, local_dict=locals())
     except Exception as err:
         st.markdown('#### Invalid syntax in expression')
         st.exception(err)

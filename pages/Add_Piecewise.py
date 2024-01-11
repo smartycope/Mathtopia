@@ -4,6 +4,18 @@ from streamlit_extras.grid import grid
 from streamlit_extras.switch_page_button import switch_page
 from ezregex import *
 import re
+from src.parse import parse
+from src.helper import show_sympy
+
+# This is only here so it preserves the current expression, if we go to this page
+# then go back without changing anythign
+st.session_state['_expr'] = st.session_state.get('_expr')
+
+# For parse. Not technically necissary, unless they bookmark the Add_Matrix page
+if 'impl_mul' not in st.session_state:
+    st.session_state['impl_mul'] = True
+if 'remove_fx' not in st.session_state:
+    st.session_state['remove_fx'] = False
 
 if 'states' not in st.session_state:
     st.session_state['states'] = []
@@ -50,6 +62,8 @@ if len(states):
     result += ')'
 
     left.code(result)
+    show_sympy(parse(result))
+
     if right.button('Overwrite Main Expression'):
         st.session_state['set_expr'] = result
         switch_page('main ')

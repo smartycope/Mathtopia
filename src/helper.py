@@ -2,19 +2,24 @@ import streamlit as st
 from sympy import *
 
 def _solve(expr, eq):
-    # If it's a Matrix, don't solve it
+    # If it's a Matrix, don't solve it, main will handle it
     if isinstance(expr, MatrixBase):
         return expr
 
     sol = solve(Eq(expr, eq))
+    # If we've passed parameters, there's nothing to solve, just return expr verbatim
     if not len(sol):
         sol = [expr]
+
     if st.session_state.do_it:
         sol = [i.doit() for i in sol if hasattr(i, 'doit')]
+
     if st.session_state.do_simplify:
         expr = simplify(expr)
+
     new_sol = []
     # Multivariable problems return dicts
+    # I had all this in ONE LINE if I didn't need a try except statement there
     for s in sol:
         if isinstance(s, (Dict, dict)):
             if st.session_state.num_eval:
@@ -32,8 +37,15 @@ def _solve(expr, eq):
                     new_sol.append(N(s))
             else:
                 new_sol.append(s)
-    if st.session_state.filter_imag:
 
+    if st.session_state.filter_imag:
+        real = list(filter(lambda i: I not in i.atoms(), sol))
+        # Only filter out the imaginary solutions if there are real solutions
+        if len(real):
+            # If we filtered any out, notify the user
+            if len(sol) != len(real):
+                st.toast('Imaginary Solutions Hidden')
+            sol = real
     return sol
 
 def show_sympy(expr):
