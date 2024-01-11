@@ -36,6 +36,7 @@ with st.sidebar:
     do_solve = st.checkbox('Solve', key='do_solve', value=True)
     do_simplify = st.checkbox('Simplify Solution', key='do_simplify', value=True)
     num_eval = st.checkbox('Give a non-symbolic answer', key='num_eval')
+    do_it = st.checkbox('Evaluate the Solution', key='do_it', value=do_simplify)
     do_check_point = st.empty()
     do_code = st.checkbox('Include Custom Code Box', key='do_code', value=False)
     if num_eval:

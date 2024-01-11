@@ -9,6 +9,8 @@ def _solve(expr, eq):
     sol = solve(Eq(expr, eq))
     if not len(sol):
         sol = [expr]
+    if st.session_state.do_it:
+        sol = [i.doit() for i in sol if hasattr(i, 'doit')]
     if st.session_state.do_simplify:
         expr = simplify(expr)
     new_sol = []
