@@ -36,6 +36,7 @@ with st.sidebar:
     do_solve = st.checkbox('Solve', key='do_solve', value=True)
     do_simplify = st.checkbox('Simplify Solution', key='do_simplify', value=True)
     num_eval = st.checkbox('Give a non-symbolic answer', key='num_eval')
+    filter_imag = st.checkbox('Filter out Imaginary Solutions', key='filter_imag', value=True)
     do_it = st.checkbox('Evaluate the Solution', key='do_it', value=do_simplify)
     do_check_point = st.empty()
     do_code = st.checkbox('Include Custom Code Box', key='do_code', value=False)
@@ -67,14 +68,6 @@ with st.sidebar:
 _left, right = st.columns([.2, .95])
 _left.empty()
 
-# if st.session_state.get('set_expr') is not None:
-#     _ex = st.session_state.get('set_expr')
-#     del st.session_state['set_expr']
-# elif st.session_state.get('_expr') is not None:
-#     _ex = st.session_state.get('_expr')
-# else:
-#     _ex = ''
-
 _ex = st.session_state.get('set_expr') or st.session_state.get('_expr') or ''
 # WHY is this necissary??
 st.session_state['_expr'] = _ex
@@ -103,7 +96,7 @@ if expr is not None:
     # The f(inputs) box
     if len(vars):
         'Solve for:'
-        a, *b, c, d = st.columns([.05] + ([.7/len(vars)]*len(vars)) + [.07, .2])
+        a, *b, c, d = st.columns([.05] + ([.7/len(vars)]*len(vars)) + [.15, .2])
         a.markdown('# f(')
         for s, v in zip(b, vars):
             s.text_input(str(v), f'Symbol("{v}")', key=f'{v}_set_to')

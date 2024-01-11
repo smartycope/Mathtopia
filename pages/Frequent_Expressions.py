@@ -48,52 +48,52 @@ with st.expander('Math Formulae'):
     button("a*x + b = y")
 
     "Function of a Circle"
-    button("x**2 + y**2 == radius**2")
+    button("x**2 + y**2 = radius**2")
 
 with st.expander('Electronics'):
     "Kirchoff's current law"
     st.caption("The sum of the currents entering a node or closed loop is 0")
-    button("Sum(nthCurrentEnteringNode, (n, 1, numBrachesConnectedToNode)) == 0")
+    button("Sum(nthCurrentEnteringNode, (n, 1, numBrachesConnectedToNode)) = 0")
 
-    "Kirchoff's voltage law"
-    st.caption("The sum of the voltages around a closed loop is 0")
-    button("Sum(high=numBrachesInLoop, low='n=1', nthVoltage) == 0")
+    # "Kirchoff's voltage law"
+    # st.caption("The sum of the voltages around a closed loop is 0")
+    # button("Sum(high=numBrachesInLoop, low='n=1', nthVoltage) == 0")
 
     "Resistance of a Wire"
-    button("Resistance == resistivity * (length / crossSectionalArea)")
+    button("resistivity * (length / crossSectionalArea) = Resistance ")
 
     "Charge or Something"
-    button("Charge(time) == Integral(time, time_0, current(time)")
+    button("Integral(time, time_0, current(time) = Charge(time)")
 
 with st.expander('Physics'):
     "Get Velocity with a Constant Acceleration"
-    button("velocity == velocity_0 + (constantAcceleration * time)")
+    button("velocity_0 + (constantAcceleration * time) = velocity")
 
     "x Position given a Constant Acceleration"
-    button("x == x_0 + (1/2) * (velocity - velocity_0) * time")
+    button("x_0 + (1/2) * (velocity - velocity_0) * time = x")
 
     "x Position given a Constant Acceleration 2"
-    button("x == x_0 + (velocity_0 * time) + ((1/2) * constantAcceleration * (time**2))")
+    button("x_0 + (velocity_0 * time) + ((1/2) * constantAcceleration * (time**2)) = x")
 
     "Velocity**2 given a Constant Acceleration"
-    button("velocity**2 == (velocity_0**2) + 2 * constantAcceleration * (x - x_0)")
+    button("(velocity_0**2) + 2 * constantAcceleration * (x - x_0) = velocity**2")
 
     "Power"
-    button("power == torque * speed")
+    button("torque * speed = power ")
 
 with st.expander('Motion'):
     "Vertical Velocity"
-    button("velocity_y == velocity_y0 - gravity * time")
+    button("velocity_y0 - gravity * time = velocity_y ")
 
     "Vertical Velocity at time"
-    button("y == y_0 + velocity_y0 * time - (1/2)*gravity*(time**2)")
+    button("y_0 + velocity_y0 * time - (1/2)*gravity*(time**2) = y")
 
     "Hybird Veritical Velocity"
-    button("velocity_y == sqrt((velocity_y0**2) - 2 * gravity * (y-y_0))")
+    button("sqrt((velocity_y0**2) - 2 * gravity * (y-y_0)) = velocity_y")
 
     "Average Angular Speed (𝜔)"
     st.caption("angle is in radians")
-    button("avgAngSpeed = 𝚫angle/𝚫time")
+    button(" 𝚫angle/𝚫time = avgAngSpeed")
 
     "Angular Acceleration (𝛼)"
-    button("angAccel = 𝚫avgAngSpeed/𝚫time")
+    button("𝚫avgAngSpeed/𝚫time = angAccel")

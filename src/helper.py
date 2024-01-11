@@ -32,6 +32,8 @@ def _solve(expr, eq):
                     new_sol.append(N(s))
             else:
                 new_sol.append(s)
+    if st.session_state.filter_imag:
+
     return sol
 
 def show_sympy(expr):
