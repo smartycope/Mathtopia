@@ -25,9 +25,9 @@ if 'vars' not in st.session_state:
 
 # Sidebar configs
 with st.sidebar:
-    remove_fx = st.checkbox('Auto-Remove `f(x) =`', key='remove_fx')
-    transformation = st.checkbox('Transform', key='transformation')
-    get_vars_from_vars = st.checkbox('Get variables from set variables', key='get_vars_from_vars')
+    # get_vars_from_vars = st.checkbox('Get variables from set variables', key='get_vars_from_vars')
+    st.session_state['get_vars_from_vars'] = False
+    remove_fx = st.checkbox('Auto-Remove `f(x) =`', key='remove_fx', value=True)
     do_solve = st.checkbox('Solve for the Selected Variable', key='do_solve', value=True)
     do_code = st.checkbox('Include Custom Code Box', key='do_code', value=True)
     do_simplify = st.checkbox('Simplify Solution', key='do_simplifiy', value=True)
