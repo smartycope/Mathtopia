@@ -19,23 +19,17 @@ solve it for you, give you information on it, and let you play with it in code.
     for you. MathML is not supported, unfortunately.
 - Sympy variables like `oo` for infinity are accepted
 - There may be multiple solutions, they're all displayed.
-- If it says 'Evaluated Directly' in the solutions area, that means we didn't solve
-the function symbolically, instead we put in all the variable substitutions you specified
-and it came out with a value.
-    - It determines whether it should evaluate directly based on other criteria though,
-    so you might see it other times as well.
+- If you specify all the variables manually, it will just return the fuction for you,
+it won't try to solve for anything. So you can ignore `= 0` part.
+""", unsafe_allow_html=True)
 
+st.divider()
 
-
-
-
-
-
-
+"""
 Credits:
 Copeland Carter
 
 https://github.com/smartycope/Mathtopia
 
 See my other streamlit project at [ezregex.org](http://ezregex.org)!
-""", unsafe_allow_html=True)
+"""
