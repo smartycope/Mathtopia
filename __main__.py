@@ -2,7 +2,6 @@ import streamlit as st
 from sympy import *
 from Cope import ensure_not_iterable
 from Cope.sympy import *
-from clipboard import copy
 from code_editor import code_editor
 # This handles a very odd error that only comes up every other run
 try:
