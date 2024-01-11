@@ -1,5 +1,5 @@
-from sympy import *
 from sympy.abc import *
+from sympy import *
 from sympy.core.function import AppliedUndef, UndefinedFunction
 from sympy.parsing.latex import parse_latex
 from sympy.parsing.sympy_parser import (convert_xor, implicit_multiplication,
@@ -66,7 +66,10 @@ def get_atoms(expr):
             isinstance(i, Symbol) and
             str(i) not in ('-', '+', ' ', '')
         )
-    return list(filter(atom_filter, expr.atoms()))
+    atoms = list(filter(atom_filter, expr.atoms()))
+    # if isinstance(expr, MatrixBase):
+        # atoms += [Symbol(f'col_{i}') for i in range(expr.cols)]
+    return atoms
 
     # Old code that works, but I feel like the above line is better
     atoms = set()

@@ -16,11 +16,14 @@ cols = right.number_input('Columns', value=3, min_value=1)
 rows = left.number_input('Rows', value=3, min_value=1)
 
 data = st.data_editor(
+    # ([['0'] * cols] * rows) if (d := st.session_state.get('data')) is None else d,
     [['0'] * cols] * rows,
     hide_index=True,
     use_container_width=False,
     column_config={str(cnt): st.column_config.TextColumn(default='0', label='') for cnt in range(cols)},
 )
+
+# st.session_state['data'] = data
 
 parsed = []
 for cnt, col in enumerate(data):

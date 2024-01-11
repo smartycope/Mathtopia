@@ -3,6 +3,7 @@ from sympy import *
 from Cope import ensure_not_iterable
 from Cope.sympy import *
 from code_editor import code_editor
+from sympy.matrices.common import ShapeError
 # This handles a very odd error that only comes up every other run
 try:
     from src.parse import parse, get_atoms
@@ -33,11 +34,12 @@ with st.sidebar:
     do_solve = st.checkbox('Solve', key='do_solve', value=True)
     do_simplify = st.checkbox('Simplify Solution', key='do_simplify', value=True)
     num_eval = st.checkbox('Give a non-symbolic answer', key='num_eval')
+    do_check_point = st.checkbox('If Expression is a Matrix, check if a point is within the space of the matrix', key='do_check_point')
+    do_code = st.checkbox('Include Custom Code Box', key='do_code', value=True)
     if num_eval:
         do_round = st.number_input('Round to:', format='%d', value=3, key='do_round')
     else:
         st.session_state['do_round'] = 10
-    do_code = st.checkbox('Include Custom Code Box', key='do_code', value=True)
 
     with st.expander('Copy', True):
         left, right = st.columns(2)
@@ -108,6 +110,11 @@ def show_sympy(expr):
         else:
             st.write(expr)
 
+def split_matrix(mat):
+    bulk = mat[:mat.cols-1, :mat.cols-1]
+    end = mat[:mat.cols-1, mat.cols-1]
+    return bulk, end
+
 # Do all the things
 if expr is not None:
     vars = get_atoms(expr)
@@ -129,7 +136,7 @@ if expr is not None:
     # The f(inputs) box
     if len(vars):
         'Solve for:'
-        a, *b, c, d = st.columns([.05] + ([.7/len(vars)]*len(vars)) + [.05, .2])
+        a, *b, c, d = st.columns([.05] + ([.7/len(vars)]*len(vars)) + [.07, .2])
         a.markdown('# f(')
         for s, v in zip(b, vars):
             s.text_input(str(v), f'Symbol("{v}")', key=f'{v}_set_to')
@@ -137,10 +144,27 @@ if expr is not None:
         eq = parse(d.text_input(' ', '0', label_visibility='hidden', key='eq'))
 
     if isinstance(expr, MatrixBase):
+        # RREF
         "Row Reduction:"
         rref, pivots = expr.rref()
         show_sympy(rref)
         f"Pivot columns: `{pivots}`"
+
+        if do_check_point:
+            # Check if Point is in Space
+            "Check if Point is in Space:"
+            cols = st.columns(expr.cols-1)
+            for col, i in zip(cols, range(expr.cols-1)):
+                col.text_input(f'col {i}', key=f'{i}_row')
+            m = 'Matrix(['
+            for i in range(expr.cols-1):
+                m += '[' + st.session_state[f'{i}_row'] + '], '
+            m += '])'
+            space, matches = split_matrix(expr)
+            try:
+                space @ parse(m) == matches
+            except ShapeError as err:
+                st.error(err)
 
     expr = expr.subs({v: parse(st.session_state[f'{v}_set_to']) for v in vars})
 
@@ -151,6 +175,8 @@ if expr is not None:
     copy_expression.code(str(expr))
     copy_expression_latex.code(latex(expr))
     copy_expression_repr.code(srepr(expr))
+
+    print(vars)
 
     # Display the solutions
     if do_solve and len(vars):
