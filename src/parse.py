@@ -16,7 +16,7 @@ import ezregex as er
 
 arrowRegex    = (er.group(er.chunk) + '->' + er.group(er.chunk)).compile()
 doubleEqRegex = (er.group(er.chunk) + '==' + er.group(er.chunk)).compile()
-eqRegex       = (er.group(er.chunk) + '='  + er.group(er.chunk)).compile()
+eqRegex       = (er.group(er.chunk) + er.anyCharExcept('<>!=') + '=' + er.anyCharExcept('<>!=') + er.group(er.chunk)).compile()
 
 varTypes = (Symbol, Derivative, Function, Integral)
 funcTypes = (AppliedUndef, UndefinedFunction) #, Function, WildFunction)
@@ -116,7 +116,7 @@ def get_atoms(expr):
     # # But varHandler wants a list, I guess
     # self.vars = sorted(list(set(self.vars)), key=lambda var: var.name)
 
-def parse(text):
+def parse(text, manual_latex=False):
     #* If there's nothing there, it's okay
     if text is not None and not len(text):
         return
@@ -124,7 +124,8 @@ def parse(text):
     #* Now calculate everything
     # First, run the input string through our function to make sure we take care
     # of the things sympy won't take care of for us (= to Eq() and the like)
-    if _detectLatex(text):
+    if _detectLatex(text) or manual_latex:
+        st.toast('Detected LaTeX, converting')
         text = _convertLatex(text)
 
     sanatized = _sanatizeInput(text)

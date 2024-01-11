@@ -27,13 +27,19 @@ if 'vars' not in st.session_state:
 with st.sidebar:
     # get_vars_from_vars = st.checkbox('Get variables from set variables', key='get_vars_from_vars')
     st.session_state['get_vars_from_vars'] = False
-    remove_fx = st.checkbox('Auto-Remove `f(x) =`', key='remove_fx', value=True)
-    do_solve = st.checkbox('Solve for the Selected Variable', key='do_solve', value=True)
-    do_code = st.checkbox('Include Custom Code Box', key='do_code', value=True)
-    do_simplify = st.checkbox('Simplify Solution', key='do_simplifiy', value=True)
+    interpret_as_latex = st.checkbox('Interpret input as LaTeX', key='interpret_as_latex')
     impl_mul = st.checkbox('Implicit Multiplication', key='impl_mul', value=True)
+    remove_fx = st.checkbox('Auto-Remove `f(x) =`', key='remove_fx', value=True)
+    do_solve = st.checkbox('Solve', key='do_solve', value=True)
+    do_simplify = st.checkbox('Simplify Solution', key='do_simplify', value=True)
+    num_eval = st.checkbox('Give a non-symbolic answer', key='num_eval')
+    if num_eval:
+        do_round = st.number_input('Round to:', format='%d', value=3, key='do_round')
+    else:
+        st.session_state['do_round'] = 10
+    do_code = st.checkbox('Include Custom Code Box', key='do_code', value=True)
 
-    with st.expander('Copy'):
+    with st.expander('Copy', True):
         left, right = st.columns(2)
         left.write('# Expression')
         copy_expression = right.empty()
@@ -55,12 +61,34 @@ with st.sidebar:
 
 _left, right = st.columns([.2, .95])
 _left.empty()
-expr = parse(right.text_input('Expression:', '' if (cur := st.session_state.get('_expr')) is None else cur, key='_expr'))
+expr = parse(right.text_input('Expression:', '' if (cur := st.session_state.get('_expr')) is None else cur, key='_expr'), interpret_as_latex)
 
-def _solve(expr, var):
-    if st.session_state.do_simplifiy:
+def _solve(expr, eq):
+    sol = solve(Eq(expr, eq))
+    if not len(sol):
+        sol = [expr]
+    if st.session_state.do_simplify:
         expr = simplify(expr)
-    return solve(expr, var)
+    new_sol = []
+    # Multivariable problems return dicts
+    for s in sol:
+        if isinstance(s, (Dict, dict)):
+            if st.session_state.num_eval:
+                try:
+                    new_sol.append({key: round(N(val), st.session_state.do_round) for key, val in s.items()})
+                except TypeError:
+                    new_sol.append({key: N(val) for key, val in s.items()})
+            else:
+                new_sol.append(s)
+        else:
+            if st.session_state.num_eval:
+                try:
+                    new_sol.append(round(N(s), st.session_state.do_round))
+                except TypeError:
+                    new_sol.append(N(s))
+            else:
+                new_sol.append(s)
+    return sol
 
 # Do all the things
 if expr is not None:
@@ -75,16 +103,19 @@ if expr is not None:
     if len(vars) == 1:
         right.caption(f'Catagories: `{tuple(categorize(expr, list(vars)[0]))}`')
 
+    # Set the updated vars in the f(x) display at the top
+    _left.markdown(f'# f({", ".join(map(str, vars))})=')
+
     # The f(inputs) box
-    a, *b, c = st.columns([.05] + ([.9/len(vars)]*len(vars)) + [.05])
+    'Solve for:'
+    a, *b, c, d = st.columns([.05] + ([.7/len(vars)]*len(vars)) + [.05, .2])
     a.markdown('# f(')
     for s, v in zip(b, vars):
         s.text_input(str(v), f'Symbol("{v}")', key=f'{v}_set_to')
-    c.markdown('# )')
+    c.markdown('# ) =')
+    eq = parse(d.text_input(' ', '0', label_visibility='hidden', key='eq'))
 
-    # Set the updated vars in the f(x) display at the top
     # if st.session_state.vars != vars:
-    _left.markdown(f'# f({", ".join(map(str, vars))})=')
 
     expr = expr.subs({v: parse(st.session_state[f'{v}_set_to']) for v in vars})
 
@@ -96,28 +127,23 @@ if expr is not None:
     copy_expression_latex.code(latex(expr))
     copy_expression_repr.code(srepr(expr))
 
-    # Solve for box
-    left, right = st.columns([.3, .7])
-    var = left.selectbox('Solve for:', vars, key='selected_var')
-
-    # Display the catagories
-    with right:
-        # Display the solutions
-        if do_solve:# or copy_solution or copy_solution_latex or copy_expression_repr:
-            with st.expander('Solutions', True):
-                solution = solve(expr, var)
-                st.session_state['solution'] = solution
-                if not len(solution):
-                    st.caption('Evaluated Directly')
-                    st.write(expr)
+    # Display the solutions
+    if do_solve:
+        with st.expander('Solutions', True):
+            solution = _solve(expr, eq)
+            st.session_state['solution'] = solution
+            for i in solution:
+                if isinstance(i, (Dict, dict)):
+                    st.write(ensure_not_iterable(i.keys()))
+                    st.write(ensure_not_iterable(i.values()))
                 else:
-                    for i in solution:
-                        st.write(i)
-                        if i != solution[-1]:
-                            st.divider()
-            copy_solution.code(str(ensure_not_iterable(solution)))
-            copy_solution_latex.code(latex(ensure_not_iterable(solution)))
-            copy_solution_repr.code(srepr(ensure_not_iterable(solution)))
+                    st.write(i)
+                # Don't add the extra divider at the bottom
+                if i != solution[-1]:
+                    st.divider()
+        copy_solution.code(str(ensure_not_iterable(solution)))
+        copy_solution_latex.code(latex(ensure_not_iterable(solution)))
+        copy_solution_repr.code(srepr(ensure_not_iterable(solution)))
 
     # Code box
     if do_code:
@@ -151,3 +177,6 @@ if expr is not None:
 
 else:
     _left.markdown('# f()=')
+
+
+# P(1 +r/n)^{nt}  compound intrest equation

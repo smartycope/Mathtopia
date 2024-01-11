@@ -1,7 +1,6 @@
 import streamlit as st
 from sympy import *
 from streamlit_extras.grid import grid
-from Cope.debugging import printArgs
 from streamlit_extras.switch_page_button import switch_page
 from ezregex import *
 import re
@@ -11,7 +10,7 @@ if 'states' not in st.session_state:
 
 st.set_page_config(layout='wide')
 
-op = ow + anyof('<', '>', '<=', '>=', '!=') + ow
+op = ow + anyof('<=', '>=', '<', '>', '!=') + ow
 interval = group(chunk, name='a') + group(op, name='op1') + group(chunk, name='b') + group(op, name='op2') + group(chunk, name='c')
 repl = '(' + rgroup('a') + ' ' + rgroup('op1') + ' ' + rgroup('b') + ') & (' + rgroup('b') + ' ' + rgroup('op2') + ' ' + rgroup('c') + ')'
 
@@ -19,10 +18,7 @@ def _parse_interval(condition):
     return re.sub(interval.str(), repl.str(), condition, count=1)
 
 # 3 lists (expr, for, condition) of length 1 more than we have already
-# _grid = grid(1, *([[1]*(len(st.session_state.states) + 1)]*3), vertical_align='center')
 left, right = st.columns([.2, .8])
-# printArgs(1, *([[1]*(len(st.session_state.states) + 1)]*3))
-# print(([[1]*(len(st.session_state.states) + 1)]*3))
 left.image('assets/piecewise.png', width=450)
 
 l, r = right.columns((.55, .45))

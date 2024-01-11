@@ -32,7 +32,15 @@ and it came out with a value.
 
 
 
+
+
+
+
+
 Credits:
 Copeland Carter
+
 https://github.com/smartycope/Mathtopia
+
+See my other streamlit project at [ezregex.org](http://ezregex.org)!
 """, unsafe_allow_html=True)
