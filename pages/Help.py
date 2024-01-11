@@ -22,6 +22,8 @@ solve it for you, give you information on it, and let you play with it in code.
 - If you specify all the variables manually, it will just return the fuction for you,
 it won't try to solve for anything. So you can ignore `= 0` part.
 - As usual, if something goes wrong, just restart the page, it'll probably fix it.
+- If you see an warning saying "The widget with key "..." was created with a default value but also had its value set via the Session State API.",
+just ignore it. It's not a problem, and I haven't figured out how to get rid of it yet.
 """, unsafe_allow_html=True)
 
 st.divider()
