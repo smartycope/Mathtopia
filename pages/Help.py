@@ -21,6 +21,7 @@ solve it for you, give you information on it, and let you play with it in code.
 - There may be multiple solutions, they're all displayed.
 - If you specify all the variables manually, it will just return the fuction for you,
 it won't try to solve for anything. So you can ignore `= 0` part.
+- As usual, if something goes wrong, just restart the page, it'll probably fix it.
 """, unsafe_allow_html=True)
 
 st.divider()

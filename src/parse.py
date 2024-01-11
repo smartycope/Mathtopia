@@ -1,5 +1,4 @@
 from sympy.abc import *
-from sympy import *
 from sympy.core.function import AppliedUndef, UndefinedFunction
 from sympy.parsing.latex import parse_latex
 from sympy.parsing.sympy_parser import (convert_xor, implicit_multiplication,
@@ -8,6 +7,7 @@ from sympy.parsing.sympy_parser import (convert_xor, implicit_multiplication,
                                         standard_transformations)
 from sympy.physics.units import *
 from sympy.physics.units.prefixes import Prefix
+from sympy import *
 import re
 import streamlit as st
 from sympy.parsing.latex import parse_latex
@@ -124,16 +124,18 @@ def get_atoms(expr):
     # # But varHandler wants a list, I guess
     # self.vars = sorted(list(set(self.vars)), key=lambda var: var.name)
 
-def parse(text, manual_latex=False):
+def parse(text, manual_latex=False) -> Expr:
+    # print('attempting to parse ', text, ' ', sep='`')
     #* If there's nothing there, it's okay
-    if text is not None and not len(text):
+    if text is None or not len(text.strip()):
         return
 
     #* Now calculate everything
     # First, run the input string through our function to make sure we take care
     # of the things sympy won't take care of for us (= to Eq() and the like)
     if _detectLatex(text) or manual_latex:
-        st.toast('Detected LaTeX, converting')
+        if not manual_latex:
+            st.toast('Detected LaTeX, converting')
         text = _convertLatex(text)
 
     sanatized = _sanatizeInput(text)
