@@ -24,25 +24,45 @@ if st.session_state.get('_expr') is None:
 if 'vars' not in st.session_state:
     st.session_state['vars'] = []
 
+# Sidebar configs
 with st.sidebar:
     remove_fx = st.checkbox('Auto-Remove `f(x) =`', key='remove_fx')
     transformation = st.checkbox('Transform', key='transformation')
     get_vars_from_vars = st.checkbox('Get variables from set variables', key='get_vars_from_vars')
     do_solve = st.checkbox('Solve for the Selected Variable', key='do_solve', value=True)
     do_categorize = st.checkbox('Catagorize the Expression', key='do_categorize', value=True)
-    do_code = st.checkbox('Include custom code box', key='do_code', value=True)
+    do_code = st.checkbox('Include Custom Code Box', key='do_code', value=True)
+    do_simplify = st.checkbox('Simplify Solution', key='do_simplifiy', value=True)
 
     with st.expander('Copy'):
-        copy_expression = st.button('Expression', key='copy_expression')
-        copy_solution = st.button('Solution', key='copy_solution')
-        copy_expression_latex = st.button('Expression LaTeX', key='copy_expression_latex')
-        copy_solution_latex = st.button('Solution LaTeX', key='copy_solution_latex')
-        copy_expression_repr = st.button('Expression Representation', key='copy_expression_repr')
-        copy_solution_repr = st.button('Solution Representation', key='copy_solution_repr')
+        left, right = st.columns(2)
+        left.write('# Expression')
+        copy_expression = right.empty()
+        left, right = st.columns(2)
+        left.write('LaTeX')
+        copy_expression_latex = right.empty()
+        left, right = st.columns(2)
+        left.write('Expanded Code')
+        copy_expression_repr = right.empty()
+        left, right = st.columns(2)
+        left.write('# Solution')
+        copy_solution = right.empty()
+        left, right = st.columns(2)
+        left.write('LaTeX')
+        copy_solution_latex = right.empty()
+        left, right = st.columns(2)
+        left.write('Expanded Code')
+        copy_solution_repr = right.empty()
 
 _left, right = st.columns([.2, .95])
 _left.empty()
 expr = parse(right.text_input('Expression:', '' if (cur := st.session_state.get('_expr')) is None else cur, key='_expr'))
+
+def _solve(expr, var):
+    if st.session_state.do_simplifiy:
+        expr = simplify(expr)
+    return solve(expr, var)
+
 
 # Do all the things
 if expr is not None:
@@ -51,7 +71,7 @@ if expr is not None:
     # The Selected Variable
     left, right = st.columns([.3, .7])
     vars = get_atoms(expr)
-    var = left.selectbox('Selected Variable:', vars, key='selected_var')
+    var = left.selectbox('Solve for:', vars, key='selected_var')
 
     # The f(x) variable setter
     a, *b, c = st.columns([.05] + ([.9/len(vars)]*len(vars)) + [.05])
@@ -70,12 +90,17 @@ if expr is not None:
     st.session_state['expr'] = expr
     st.session_state['vars'] = vars
 
+    copy_expression.code(str(expr))
+    copy_expression_latex.code(latex(expr))
+    copy_expression_repr.code(srepr(expr))
+
+
     # Display the catagories
     if do_categorize and len(vars) == 1:
         f'Catagories: `{tuple(categorize(expr, list(vars)[0]))}`'
 
     # Display the solutions
-    if do_solve:
+    if do_solve:# or copy_solution or copy_solution_latex or copy_expression_repr:
         with st.expander('Solutions', True):
             solution = solve(expr, var)
             st.session_state['solution'] = solution
@@ -87,6 +112,9 @@ if expr is not None:
                     st.write(i)
                     if i != solution[-1]:
                         st.divider()
+        copy_solution.code(str(ensure_not_iterable(solution)))
+        copy_solution_latex.code(latex(ensure_not_iterable(solution)))
+        copy_solution_repr.code(srepr(ensure_not_iterable(solution)))
 
     # Code box
     if do_code:
@@ -115,26 +143,6 @@ if expr is not None:
 
                 The last line in the box gets shown to the right (no need to print or set to a variable)
             ''')
-
-    # All the copy buttons
-    if copy_expression:
-        copy(str(expr))
-    if copy_solution:
-        if not do_solve:
-            solution = solve(expr, var)
-        copy(str(ensure_not_iterable(solution)))
-    if copy_expression_latex:
-        copy(latex(expr))
-    if copy_solution_latex:
-        if not do_solve:
-            solution = solve(expr, var)
-        copy(latex(ensure_not_iterable(solution)))
-    if copy_expression_repr:
-        copy(srepr(expr))
-    if copy_solution_repr:
-        if not do_solve:
-            solution = solve(expr, var)
-        copy(srepr(ensure_not_iterable(solution)))
 
 else:
     _left.markdown('# f()=')
