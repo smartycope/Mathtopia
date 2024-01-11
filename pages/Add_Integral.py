@@ -8,14 +8,13 @@ st.set_page_config(layout='centered')
 _grid = grid([1, 1, 2], [4, 1, 1], [1, 1, 2], vertical_align="bottom")
 
 st.session_state['_expr'] = st.session_state.get('_expr')
-st.session_state['selected_var'] = st.session_state.get('selected_var')
 
 _grid.empty()
 to = _grid.text_input('To:')
 _grid.empty()
 _grid.image('assets/integral.png', width=200)
 func = _grid.text_input('Func:', st.session_state.get('_expr'))
-var = _grid.text_input('Var:', st.session_state.get('selected_var'))
+var = _grid.text_input('Var:', st.session_state.vars[0] if len(st.session_state.vars) == 1 else '')
 _grid.empty()
 from_ = _grid.text_input('From:')
 

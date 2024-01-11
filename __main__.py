@@ -64,6 +64,10 @@ _left.empty()
 expr = parse(right.text_input('Expression:', '' if (cur := st.session_state.get('_expr')) is None else cur, key='_expr'), interpret_as_latex)
 
 def _solve(expr, eq):
+    # If it's a Matrix, don't solve it
+    if isinstance(expr, MatrixBase):
+        return expr
+
     sol = solve(Eq(expr, eq))
     if not len(sol):
         sol = [expr]
@@ -90,12 +94,26 @@ def _solve(expr, eq):
                 new_sol.append(s)
     return sol
 
+def show_sympy(expr):
+    if isinstance(expr, (Dict, dict)):
+        st.write(ensure_not_iterable(expr.keys()))
+        tmp = ensure_not_iterable(expr.values())
+        if isinstance(tmp, MatrixBase):
+            st.dataframe(matrix2numpy(expr), hide_index=True, column_config={str(cnt): st.column_config.TextColumn(default='0', label='') for cnt in range(len(expr))})
+        else:
+            st.write(tmp)
+    else:
+        if isinstance(expr, MatrixBase):
+            st.dataframe(matrix2numpy(expr), hide_index=True, column_config={str(cnt): st.column_config.TextColumn(default='0', label='') for cnt in range(len(expr))})
+        else:
+            st.write(expr)
+
 # Do all the things
 if expr is not None:
     vars = get_atoms(expr)
 
     # Show expr
-    st.write(expr)
+    show_sympy(expr)
 
     # Top captions
     left, right = st.columns((.65, .35))
@@ -106,16 +124,23 @@ if expr is not None:
     # Set the updated vars in the f(x) display at the top
     _left.markdown(f'# f({", ".join(map(str, vars))})=')
 
-    # The f(inputs) box
-    'Solve for:'
-    a, *b, c, d = st.columns([.05] + ([.7/len(vars)]*len(vars)) + [.05, .2])
-    a.markdown('# f(')
-    for s, v in zip(b, vars):
-        s.text_input(str(v), f'Symbol("{v}")', key=f'{v}_set_to')
-    c.markdown('# ) =')
-    eq = parse(d.text_input(' ', '0', label_visibility='hidden', key='eq'))
+    st.divider()
 
-    # if st.session_state.vars != vars:
+    # The f(inputs) box
+    if len(vars):
+        'Solve for:'
+        a, *b, c, d = st.columns([.05] + ([.7/len(vars)]*len(vars)) + [.05, .2])
+        a.markdown('# f(')
+        for s, v in zip(b, vars):
+            s.text_input(str(v), f'Symbol("{v}")', key=f'{v}_set_to')
+        c.markdown('# ) =')
+        eq = parse(d.text_input(' ', '0', label_visibility='hidden', key='eq'))
+
+    if isinstance(expr, MatrixBase):
+        "Row Reduction:"
+        rref, pivots = expr.rref()
+        show_sympy(rref)
+        f"Pivot columns: `{pivots}`"
 
     expr = expr.subs({v: parse(st.session_state[f'{v}_set_to']) for v in vars})
 
@@ -128,16 +153,12 @@ if expr is not None:
     copy_expression_repr.code(srepr(expr))
 
     # Display the solutions
-    if do_solve:
+    if do_solve and len(vars):
         with st.expander('Solutions', True):
             solution = _solve(expr, eq)
             st.session_state['solution'] = solution
             for i in solution:
-                if isinstance(i, (Dict, dict)):
-                    st.write(ensure_not_iterable(i.keys()))
-                    st.write(ensure_not_iterable(i.values()))
-                else:
-                    st.write(i)
+                show_sympy(i)
                 # Don't add the extra divider at the bottom
                 if i != solution[-1]:
                     st.divider()

@@ -17,12 +17,7 @@ solve it for you, give you information on it, and let you play with it in code.
     - It will interpret the `^` operator as the exponent operator, *not* the xor operator.
     - You can paste valid LaTeX code into the expression box, and it will parse it
     for you. MathML is not supported, unfortunately.
-- In code, the expression provided is an expression, not a function. Cause all expressions
-are just headless functions. So feel free to add equal signs in there.
-    - `=` signs are converted to `-` signs in the expression, because of how sympy works
-    (when solving, expressions are assumed to equal 0, so `8x - 4 = 0` == `8x = 4`)
-    - `==` signs (and other operators) are parsed as Eq() classes
-        - When you use `==` signs though, be the deselect 'Auto-Remove f(x)` option
+- Sympy variables like `oo` for infinity are accepted
 - There may be multiple solutions, they're all displayed.
 - If it says 'Evaluated Directly' in the solutions area, that means we didn't solve
 the function symbolically, instead we put in all the variable substitutions you specified
