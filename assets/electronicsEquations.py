@@ -2,42 +2,6 @@ from .Equation import Equation, Unit
 from .namespaces import electronics
 from sympy import symbols, parse_expr, And, Eq, Piecewise
 
-def parallel(*resistors):
-    bottom = 0
-    for r in resistors:
-        bottom += 1/r
-    return 1/bottom
-
-def series(*resistors):
-    return sum(resistors)
-
-def voltDivider(inVoltage, r1, r2) -> 'voltage in the middle':
-    return (inVoltage * r2) / (r1 + r2)
-
-def splitEvenly(amount, *avenues):
-    net = parallel(*avenues)
-    return [((net / r) * amount) for r in avenues]
-
-def voltageBetweenCapacitors(Vin, C1, C2):
-    vn2 = symbols('vn2')
-    C1Charge = capacitor(v=Vin-vn2, C=C1)
-    C2Charge = capacitor(v=vn2,     C=C2)
-    return ensureNotIterable(solve(Eq(C1Charge, C2Charge), vn2))
-
-def maxPower(Vth, Rth) -> 'P_Rl':
-    return (Vth ** 2) / ( 4 * Rth)
-
-def norton2Thevinin(In, Rn):
-    return (In * Rn, Rn)
-
-def thevinin2Norton(Vth, Rth):
-    return (Vth / Rth, Rth)
-
-fivePercentResistor = (1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4, 2.7, 3.0, 3.3, 3.6, 3.9, 4.3, 4.7, 5.1, 5.6, 6.2, 6.8, 7.5, 8.2, 9.1)
-def roundToMultipliers(value, multipliers=fivePercentResistor, scale=1000):
-    return multipliers[findIndex(multipliers, round(value, log(scale, 10) - 1) / scale)] * scale
-
-
 ll = parallel
 s = series
 

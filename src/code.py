@@ -25,6 +25,8 @@ def run_code(code, rtn_tab, output_tab, errors_tab):
         err = io.StringIO()
         expr = st.session_state.expr
         solution = st.session_state.solution
+        equals = st.session_state.eq
+        vars = st.session_state.vars
 
         _locals = locals()
         with RedirectStd(stdout=std, stderr=err):

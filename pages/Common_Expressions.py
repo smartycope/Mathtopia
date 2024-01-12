@@ -1,10 +1,14 @@
 import streamlit as st
 from streamlit_extras.switch_page_button import switch_page
+# from src.helper import show_sympy
+# from src.parse import parse
 
 def eq(expr):
     if st.button(expr):
-        st.session_state['_expr'] = expr
+        st.session_state['set_expr'] = expr
         switch_page('main ')
+    # For some reason this causes in infinite loop of some sort??
+    # show_sympy(parse(expr))
 
 
 "# Math"
@@ -127,13 +131,13 @@ with st.expander('Motion'):
     "Motion 3"
     eq('sqrt((velocity_initial**2) - 2 * a * (momentum - momentum_initial)) = velocity')
 
-    "Angular to Linear Velocity"
+    "Angular <-> Linear Velocity"
     eq('radius * angular_velocity = velocity')
 
-    "Angular to Linear Acceleration"
+    "Angular <-> Linear Acceleration"
     eq('radius * angular_acceleration = acceleration')
 
-    "Angle to Distnace"
+    "Angle <-> Distnace"
     eq('distnace / radius = angle')
 
 
@@ -144,7 +148,7 @@ with st.expander('Angular Kinematics'):
     "Angular Acceleration"
     eq('delta_angular_speed / delta_time = velocity_angular')
 
-    "Angular Velocity to Velocity"
+    "Angular Velocity <-> Velocity"
     eq("angular_velocity * radius = velocity")
 
     "Angular Acceleration"
@@ -153,10 +157,10 @@ with st.expander('Angular Kinematics'):
     "Rolling Kinetic Energy"
     eq('(1/2) * i * angular_velocity**2 + (1/2) * mass * velocity**2')
 
-    "Radians per Second to Angular Velocity"
+    "Radians per Second <-> Angular Velocity"
     eq('2 * π * period = angular_velocity')
 
-    "Radians per Second to Linear Velocity"
+    "Radians per Second <-> Linear Velocity"
     eq('2 * π * radians * period = linear_velocity')
 
 
@@ -177,7 +181,7 @@ with st.expander('Energy'):
     eq('energy_kinetic + energy_potential')
 
 
-"# Electronics"
+"# Misc."
 with st.expander('Electronics'):
     "Kirchoff's current law"
     st.caption("The sum of the currents entering a node or closed loop is 0")
@@ -192,3 +196,39 @@ with st.expander('Electronics'):
 
     "Charge or Something"
     eq("Integral(time, time_0, current(time) = Charge(time)")
+
+with st.expander("Waves"):
+    'Complex Waveform'
+    eq('amplitude * cos(wavenumber * offset_x - ohmega * time + phase_angle) + offset_y = amplitude_at_time')
+
+    "Sinusiod"
+    eq('amplitude * sin(ohmega * time * phase_angle) + offset_y = amplitude_at_time')
+
+    "Angular Frequency <-> Frequency"
+    eq('2 * π * frequency = frequency_angular')
+
+    "Angular Frequncy <-> Period"
+    eq('(2*π) / frequency_angular = period')
+
+    "Frequency <-> Period"
+    eq('1/period = frequency')
+
+with st.expander("Chemistry"):
+    'Wavelength <-> Freqency'
+    eq('wavelength * freqency = speed_of_light')
+
+    'Photon Energy'
+    eq('frequency * reduced_plank_constant = energy_photon')
+
+    'Photon Energy 2'
+    eq('(reduced_plank_constant * speed_of_light) / wavelength = energy_photon')
+
+    "Orbital Energy"
+    eq('-2.18 * (10**-18) * ((nucleus_charge**2) / (orbital**2)) = energy_orbital')
+
+    "Density"
+    eq('mass / volume = density')
+
+st.divider()
+st.caption('This is by no means a comprehensive list. I\'m sure it has many holes. If you would like to help, feel free to submit a pull request!')
+st.caption('https://github.com/smartycope/Mathtopia/blob/master/pages/Common_Expressions.py')

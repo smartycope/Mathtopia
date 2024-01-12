@@ -5,12 +5,6 @@ from src.parse import parse
 
 st.set_page_config(layout='centered')
 
-# For parse. Not technically necissary, unless they bookmark the Add_Matrix page
-if 'impl_mul' not in st.session_state:
-    st.session_state['impl_mul'] = True
-if 'remove_fx' not in st.session_state:
-    st.session_state['remove_fx'] = False
-
 left, right = st.columns(2)
 cols = right.number_input('Columns', value=3, min_value=1)
 rows = left.number_input('Rows', value=3, min_value=1)

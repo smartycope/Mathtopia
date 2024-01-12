@@ -28,16 +28,17 @@ if 'vars' not in st.session_state:
 
 # Sidebar configs
 with st.sidebar:
-    func_name = st.text_input('Function Name', key='func_name', value='f')
-    interpret_as_latex = st.checkbox('Interpret input as LaTeX', key='interpret_as_latex')
-    impl_mul = st.checkbox('Implicit Multiplication', key='impl_mul', value=True)
-    remove_fx = st.checkbox('Auto-Remove `f(x) =`', key='remove_fx', value=True)
-    do_solve = st.checkbox('Solve', key='do_solve', value=True)
-    do_simplify = st.checkbox('Simplify Solution', key='do_simplify', value=True)
-    do_it = st.checkbox('Evaluate the Solution', key='do_it', value=do_simplify)
-    num_eval = st.checkbox('Give a non-symbolic answer', key='num_eval')
-    filter_imag = st.checkbox('Filter out Imaginary Solutions', key='filter_imag', value=True)
-    do_code = st.checkbox('Include Custom Code Box', key='do_code', value=False)
+    # Don't do this anymore. We now handle equal signs by putting them in the = box
+    # remove_fx = st.checkbox('Auto-Remove `f(x) =`',              key='remove_fx',   value=True)
+    func_name = st.text_input('Function Name',                   key='func_name',   value='f')
+    interpret_as_latex = st.checkbox('Interpret input as LaTeX', key='interpret_as_latex',       help='The expression box will automatically detect LaTeX code for you. Click this to manually tell it that it is LaTeX, in case the detection doesnt work')
+    impl_mul = st.checkbox('Implicit Multiplication',            key='impl_mul',    value=True,  help='Allows you to do things like `3x` and `3(x+1) without throwing errors')
+    do_solve = st.checkbox('Solve',                              key='do_solve',    value=True,  help='Whether to solve the equation or not. Helpful if you want to look at things that take a long time to solve, like some integrals.')
+    do_simplify = st.checkbox('Simplify Solution',               key='do_simplify', value=True,  help='This reduces the equation down to its most simple form')
+    do_it = st.checkbox('Evaluate the Solution',                 key='do_it',       value=do_simplify, help='This is distinct from simplifying the expression. Simplifying will reduce down to, say, an integral, as opposed to actually evaluating (symbolically) the integral.')
+    num_eval = st.checkbox('Give a non-symbolic answer',         key='num_eval',    value=False, help='Evaluate the function numerically instead of symbolically')
+    filter_imag = st.checkbox('Filter out Imaginary Solutions',  key='filter_imag', value=True,  help='Whether we should include answers with `i` in them or not')
+    do_code = st.checkbox('Include Custom Code Box',             key='do_code',     value=False, help='Adds a code area where we can run Python & sympy code directly on the expression')
     do_check_point = st.empty()
     if num_eval:
         do_round = st.number_input('Round to:', format='%d', value=3, key='do_round')
@@ -70,7 +71,7 @@ with st.sidebar:
     with st.expander('Advanced Options'):
         # get_vars_from_vars = st.checkbox('Get variables from set variables', key='get_vars_from_vars')
         st.session_state['get_vars_from_vars'] = False
-        use_area_box = st.checkbox('Use Text Area Instead of Single Line', key='use_area_box')
+        use_area_box = st.checkbox('Use Text Area Instead of Single Line', key='use_area_box', help='Instead of using a single line to specify the function, use a larger text box')
 
 
 func_name_top_line = st.empty()
@@ -83,7 +84,17 @@ st.session_state['_expr'] = _ex
 if 'set_expr' in st.session_state:
     del st.session_state['set_expr']
 box_type = right.text_area if use_area_box else right.text_input
+print(st.session_state._expr)
 expr = parse(box_type('Expression:', value=_ex, key='_expr'), interpret_as_latex)
+
+# This shouldn't be necissary. I have no idea why it is. And it's STILL inconsistent
+# This is for toasting units of constants we've replaced
+if (bread := st.session_state.get('to_toast')) is not None and len(bread):
+    for _ in range(len(bread)):
+        print('toasting from main')
+        st.toast(bread.pop())
+
+print(expr)
 
 # Do all the things
 if expr is not None:
@@ -186,8 +197,14 @@ if expr is not None:
             help_tab.markdown('''
                 ### In the code box, you can run sympy expressions directly on the current expression
                 The code box accepts valid Python, and has the following variables in scope:
-                - `expr`: The current expression. Is of type `Expr`
-                - `solution`: The current solutions. Is a list
+                - `expr`:Expr
+                    - The current expression
+                - `solution`:List[Expr]
+                    - The current solutions
+                - `equals`:Expr
+                    - The expression the function is set to equal
+                - `vars`:Dict[Symbol: Expr]
+                    - All the variables and what they're set to
                 - Everything in the default sympy scope, and sympy.abc
                 - Everything in the pages/funcs.py
 

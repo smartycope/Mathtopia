@@ -13,6 +13,7 @@ import streamlit as st
 from sympy.parsing.latex import parse_latex
 from sympy.parsing import parse_expr
 import ezregex as er
+from pages.Constants import constants
 
 arrowRegex    = (er.group(er.chunk) + er.ow + '->' + er.ow + er.group(er.chunk)).compile()
 doubleEqRegex = (er.group(er.chunk) + er.ow + '==' + er.ow + er.group(er.chunk)).compile()
@@ -21,6 +22,15 @@ eqRegex       = (er.group(er.chunk) + er.ow + er.anyCharExcept('<>!=') + '=' + e
 varTypes = (Symbol, Derivative, Function, Integral)
 funcTypes = (AppliedUndef, UndefinedFunction) #, Function, WildFunction)
 
+replacements = {
+    '−': '-',
+    'π': 'pi',
+    '∞': 'oo',
+    '⋅': '*',
+    '×': '*',
+    '→': '->',
+    '∫': 'Integral',
+}
 
 def _detectLatex(s):
     return '\\' in s or '{' in s or '}' in s
@@ -39,14 +49,24 @@ def _sanatizeLatex(latex):
 def _convertLatex(s):
     return str(parse_latex(_sanatizeLatex(s)))
 
-def _sanatizeInput(eq:str):
-    eq = re.sub('−', '-', eq)
-    eq = re.sub('π', 'pi', eq)
-    eq = re.sub('∞', 'oo', eq)
-    eq = re.sub('⋅', '*', eq)
-    eq = re.sub('×', '*', eq)
-    eq = re.sub('→', '->', eq)
-    eq = re.sub('∫', 'Integral', eq)
+def _sanatizeInput(eq:str, replace_constants=True):
+    for symbol, replacement in replacements.items():
+        eq = re.sub(symbol, replacement, eq)
+
+    if replace_constants:
+        for default, replacement in constants.items():
+            found = re.search(default, eq)
+            # So it only toasts if it's relevant
+            if found is not None:
+                eq = re.sub(default, replacement['value'], eq)
+                # Make sure they know the correct units
+                if st.session_state.get('to_toast') is not None:
+                    st.session_state['to_toast'] = st.session_state['to_toast'].append(f"{default} is in units of {replacement['unit']}")
+                else:
+                    st.session_state['to_toast'] = [f"{default} is in units of {replacement['unit']}"]
+                # For good measure, try to toast, even though it doesn't work here
+                # (for some scudding reason)
+                st.toast(f"{default} is in units of {replacement['unit']}")
 
     eRegex = 'e' + er.ifNotPrecededBy(er.wordChar) + er.ifNotFollowedBy(er.wordChar)
     eq = re.sub(str(eRegex), 'E', eq)
@@ -135,7 +155,13 @@ def get_atoms(expr):
     # # But varHandler wants a list, I guess
     # self.vars = sorted(list(set(self.vars)), key=lambda var: var.name)
 
-def parse(text, manual_latex=False) -> Expr:
+def parse(text, manual_latex=False, replace_constants=True) -> Expr:
+    # Not technically necissary, unless they bookmark a page that uses parse
+    if 'impl_mul' not in st.session_state:
+        st.session_state['impl_mul'] = True
+    # if 'remove_fx' not in st.session_state:
+        # st.session_state['remove_fx'] = False
+
     # print('attempting to parse ', text, ' ', sep='`')
     #* If there's nothing there, it's okay
     if text is None or not len(text.strip()):
@@ -149,7 +175,7 @@ def parse(text, manual_latex=False) -> Expr:
             st.toast('Detected LaTeX, converting')
         text = _convertLatex(text)
 
-    sanatized = _sanatizeInput(text)
+    sanatized = _sanatizeInput(text, replace_constants)
 
     # Because we're including locals in the parsing, parse these too
     i = I
@@ -165,9 +191,10 @@ def parse(text, manual_latex=False) -> Expr:
     except Exception as err:
         st.markdown('#### Invalid syntax in expression')
         st.exception(err)
+    # Don't do this anymore. We now handle equal signs by putting them in the = box
     else:
         # See if we need to remove one side of the equation
-        if st.session_state.remove_fx and isinstance(expr, Eq):
-            expr = expr.rhs
+        # if st.session_state.remove_fx and isinstance(expr, Eq):
+            # expr = expr.rhs
 
         return expr

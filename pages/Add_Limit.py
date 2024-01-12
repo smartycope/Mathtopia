@@ -4,12 +4,6 @@ from streamlit_extras.switch_page_button import switch_page
 from src.parse import parse
 from src.helper import show_sympy
 
-# For parse. Not technically necissary, unless they bookmark the Add_Matrix page
-if 'impl_mul' not in st.session_state:
-    st.session_state['impl_mul'] = True
-if 'remove_fx' not in st.session_state:
-    st.session_state['remove_fx'] = False
-
 st.set_page_config(layout='centered')
 st.session_state['_expr'] = st.session_state.get('_expr')
 

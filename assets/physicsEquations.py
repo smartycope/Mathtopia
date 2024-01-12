@@ -4,16 +4,6 @@ from sympy import Symbol
 from .constants import *
 
 
-newtonsLaw = Equation("f == m*a", physics)
-newtonsLawGravity = Equation('f == m * g', physics, defaults={'g': 9.805})
-newtonsLawFriction = Equation('f == mu * f_N', physics)
-# newtonsLawWeight = Equation('w == m * a', physics)
-dragEqu = Equation('R == -b * v', physics, tags={'drag'})
-
-thrust = Equation('f == m*v', physics.child(
-    Unit('m', 'Mass Flow Rate', 'kg/s'),
-    Unit('v', 'Exhaust velocity', 'm/s')
-))
 
 # Frantic notes from the notes page
 avgVelocity           = Equation('v == d/t',                                                 physics)
@@ -46,58 +36,6 @@ vectorTheta           = Equation('theta == atan(ry/rx)',                        
 # explainMe             = Equation('fNet == m * ((v**2) / r)',                                 physicsNamespace)
 # someLeftoverLine      = Equation('f_smax == staticFriction * netForce',                      physicsNamespace)
 
-
-#* Obvious ones for masterSolve
-deltaV = Equation('dv == initv - finalv', physics, tags={'motion'})
-deltaV = Equation('v == dv', physics, tags={'motion'})
-
-#* Angular Kinematics
-centripitalMotion = Equation('a == (v**2)/r', physics.child(
-    Unit('a', 'centripetal acceleration'),
-    Unit('v', 'tangential (regular) velocity'),
-    Unit('r', 'radius')
-), 'The centripetal acceleration is always pointing towards the center', tags={'motion', 'angular motion'})
-# angularSpeed = Equation('angs == dang/dt', physicsNamespace)
-angularAccel = Equation('angA == dangs/dt', physics, tags={'motion', 'angular motion'})
-angularVelocity = Equation('v == angV * r', physics, tags={'motion', 'angular motion'})
-angularAcceleration = Equation('angA == Derivative(angV, t)', physics, tags={'motion', 'angular motion'})
-kineticEnergyRolling = Equation('ker == (1/2) * I * angV**2 + (1/2) * m * v**2', physics.child(Unit('m', 'the mass of the center of mass')),
-    defaults={'v': Symbol('angV')*Symbol('r')},
-    help='Remember that v is linear velocity, while angV is the angular velocity!',
-    tags={'energy', 'kinetic energy', 'rolling', 'motion'}
-)
-rps2angV = Equation('angV == 2*pi*T', physics)
-rps2linV = Equation('linV == 2*pi*r*T', physics)
-
-#* Kinematics
-motionEqu1 = Equation("v == initv - a * t", physics, tags={'motion'})
-motionEqu2 = Equation("pos == initPos + initv * t - (1/2)*a*(t**2)", physics, tags={'motion'})
-motionEqu3 = Equation("v == sqrt((initv**2) - 2 * a * (p-initp))", physics, tags={'motion'})
-angV2linV = linV2angV = Equation("v == r*angV", physics, tags={'motion', 'angular motion'})
-angA2linA = linA2angA = Equation('a == r*angA', physics)
-ang2dist = dist2ang = Equation('theta == d/r', physics)
-
-#* Energy
-kineticEnergy = Equation("ke == (1/2) * m * v**2", physics, tags={'energy', 'kinetic energy'})
-gravityPotentialEnergy = Equation("peg == m * g * h", physics, defaults={"g": 9.805}, tags={'energy', 'potential energy'})
-# springPotentialEnergy = Equation('pes == (1/2) * k * (dx**2)', physicsNamespace)
-loopPotentialEnergy = Equation("pec == m * g * 2 * r", physics, defaults={"g": 9.805}, tags={'energy', 'potential energy'})
-totalEnergy = Equation("te == ke + pe", physics, tags={'energy'})
-mechanicalEnergy = Equation("me == pe + ke", physics, tags={'energy'})
-
-
-
-
-
-
-
-
-
-
-
-
-
-###################### here #####################
 
 
 
