@@ -1,5 +1,6 @@
 import streamlit as st
 from sympy import *
+from Cope import ensure_not_iterable
 
 def _solve(expr, eq):
     # If it's a Matrix, don't solve it, main will handle it
@@ -12,7 +13,12 @@ def _solve(expr, eq):
         sol = [expr]
 
     if st.session_state.do_it:
-        sol = [i.doit() for i in sol if hasattr(i, 'doit')]
+        simplified = [i.doit() for i in sol if hasattr(i, 'doit')]
+        # Don't simplify it if it doesn't give anything.
+        # This happens when solving for multiple variables symbolically
+        # We want to let the dic stuff below handle that.
+        if len(simplified):
+            sol = simplified
 
     if st.session_state.do_simplify:
         expr = simplify(expr)
@@ -39,7 +45,7 @@ def _solve(expr, eq):
                 new_sol.append(s)
 
     if st.session_state.filter_imag:
-        real = list(filter(lambda i: I not in i.atoms(), sol))
+        real = list(filter(lambda i: I not in (i.atoms() if not isinstance(i, (Dict, dict)) else list(i.values())[0].atoms()), sol))
         # Only filter out the imaginary solutions if there are real solutions
         if len(real):
             # If we filtered any out, notify the user

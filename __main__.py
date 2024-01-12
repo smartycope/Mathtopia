@@ -28,24 +28,23 @@ if 'vars' not in st.session_state:
 
 # Sidebar configs
 with st.sidebar:
-    # get_vars_from_vars = st.checkbox('Get variables from set variables', key='get_vars_from_vars')
-    st.session_state['get_vars_from_vars'] = False
+    func_name = st.text_input('Function Name', key='func_name', value='f')
     interpret_as_latex = st.checkbox('Interpret input as LaTeX', key='interpret_as_latex')
     impl_mul = st.checkbox('Implicit Multiplication', key='impl_mul', value=True)
     remove_fx = st.checkbox('Auto-Remove `f(x) =`', key='remove_fx', value=True)
     do_solve = st.checkbox('Solve', key='do_solve', value=True)
     do_simplify = st.checkbox('Simplify Solution', key='do_simplify', value=True)
+    do_it = st.checkbox('Evaluate the Solution', key='do_it', value=do_simplify)
     num_eval = st.checkbox('Give a non-symbolic answer', key='num_eval')
     filter_imag = st.checkbox('Filter out Imaginary Solutions', key='filter_imag', value=True)
-    do_it = st.checkbox('Evaluate the Solution', key='do_it', value=do_simplify)
-    do_check_point = st.empty()
     do_code = st.checkbox('Include Custom Code Box', key='do_code', value=False)
+    do_check_point = st.empty()
     if num_eval:
         do_round = st.number_input('Round to:', format='%d', value=3, key='do_round')
     else:
         st.session_state['do_round'] = 10
 
-    with st.expander('Copy', True):
+    with st.expander('Copy', False):
         left, right = st.columns(2)
         left.write('# Expression')
         copy_expression = right.empty()
@@ -64,6 +63,15 @@ with st.sidebar:
         left, right = st.columns(2)
         left.write('Expanded Code')
         copy_solution_repr = right.empty()
+        left, right = st.columns(2)
+        left.write('# Function Call')
+        copy_full_expression = right.empty()
+
+    with st.expander('Advanced Options'):
+        # get_vars_from_vars = st.checkbox('Get variables from set variables', key='get_vars_from_vars')
+        st.session_state['get_vars_from_vars'] = False
+        use_area_box = st.checkbox('Use Text Area Instead of Single Line', key='use_area_box')
+
 
 func_name_top_line = st.empty()
 func_name_same_line, right = st.columns([.2, .95])
@@ -74,7 +82,8 @@ _ex = st.session_state.get('set_expr') or st.session_state.get('_expr') or ''
 st.session_state['_expr'] = _ex
 if 'set_expr' in st.session_state:
     del st.session_state['set_expr']
-expr = parse(right.text_input('Expression:', value=_ex, key='_expr'), interpret_as_latex)
+box_type = right.text_area if use_area_box else right.text_input
+expr = parse(box_type('Expression:', value=_ex, key='_expr'), interpret_as_latex)
 
 # Do all the things
 if expr is not None:
@@ -90,11 +99,11 @@ if expr is not None:
         right.caption(f'Catagories: `{tuple(categorize(expr, list(vars)[0]))}`')
 
     # Set the updated vars in the f(x) display at the top
-    func_name = f'# f({", ".join(map(str, vars))})='
-    if len(func_name) > 7:
-        func_name_top_line.markdown(func_name)
+    func_intro = f'# {func_name}({", ".join(map(str, vars))})='
+    if len(func_intro) > 7:
+        func_name_top_line.markdown(func_intro)
     else:
-        func_name_same_line.markdown(func_name)
+        func_name_same_line.markdown(func_intro)
 
     st.divider()
 
@@ -102,11 +111,13 @@ if expr is not None:
     if len(vars):
         'Solve for:'
         a, *b, c, d = st.columns([.05] + ([.7/len(vars)]*len(vars)) + [.15, .2])
-        a.markdown('# f(')
+        a.markdown(f'# {func_name}(')
         for s, v in zip(b, vars):
             s.text_input(str(v), f'Symbol("{v}")', key=f'{v}_set_to')
         c.markdown('# ) =')
         eq = parse(d.text_input(' ', '0', label_visibility='hidden', key='eq'))
+
+        copy_full_expression.code(func_intro[2:] + str(eq))
 
     # Matrix stuff
     if isinstance(expr, MatrixBase):
@@ -193,4 +204,4 @@ else:
     func_name_same_line.markdown('# f()=')
 
 
-# P(1 +r/n)^{nt}  compound intrest equation
+#   compound intrest equation

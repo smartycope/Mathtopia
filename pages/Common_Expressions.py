@@ -6,6 +6,8 @@ def eq(expr):
         st.session_state['_expr'] = expr
         switch_page('main ')
 
+
+"# Math"
 with st.expander('Volume and Area'):
     "Volume of a Cylinder"
     eq("π * height * radius**2")
@@ -37,6 +39,7 @@ with st.expander('Volume and Area'):
     "Area Between 2 Functions"
     eq("Integral(f(x) - g(x), (x, lowerbound, upperbound))")
 
+
 with st.expander('Math Formulae'):
     "Definition of a Derivative"
     eq("Limit((f(x+h) - f(x)) / h, h, 0)")
@@ -50,20 +53,6 @@ with st.expander('Math Formulae'):
     "Function of a Circle"
     eq("x**2 + y**2 = radius**2")
 
-with st.expander('Electronics'):
-    "Kirchoff's current law"
-    st.caption("The sum of the currents entering a node or closed loop is 0")
-    eq("Sum(nthCurrentEnteringNode, (n, 1, numBrachesConnectedToNode)) = 0")
-
-    # "Kirchoff's voltage law"
-    # st.caption("The sum of the voltages around a closed loop is 0")
-    # eq("Sum(high=numBrachesInLoop, low='n=1', nthVoltage) == 0")
-
-    "Resistance of a Wire"
-    eq("resistivity * (length / crossSectionalArea) = Resistance ")
-
-    "Charge or Something"
-    eq("Integral(time, time_0, current(time) = Charge(time)")
 
 with st.expander('Linear Algebra'):
     "Vector Magnitude"
@@ -186,3 +175,20 @@ with st.expander('Energy'):
 
     "Total Energy"
     eq('energy_kinetic + energy_potential')
+
+
+"# Electronics"
+with st.expander('Electronics'):
+    "Kirchoff's current law"
+    st.caption("The sum of the currents entering a node or closed loop is 0")
+    eq("Sum(nthCurrentEnteringNode, (n, 1, numBrachesConnectedToNode)) = 0")
+
+    # "Kirchoff's voltage law"
+    # st.caption("The sum of the voltages around a closed loop is 0")
+    # eq("Sum(high=numBrachesInLoop, low='n=1', nthVoltage) == 0")
+
+    "Resistance of a Wire"
+    eq("resistivity * (length / crossSectionalArea) = Resistance ")
+
+    "Charge or Something"
+    eq("Integral(time, time_0, current(time) = Charge(time)")
