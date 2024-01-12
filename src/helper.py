@@ -1,4 +1,5 @@
 import streamlit as st
+import matplotlib.pyplot as plt
 from sympy import *
 from Cope import ensure_not_iterable
 

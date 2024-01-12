@@ -1,4 +1,8 @@
 import streamlit as st
+import matplotlib.pyplot as plt
+from sympy.plotting.plot import plot_parametric
+from sympy import *
+from sympy.abc import x,y,z
 from sympy import *
 from Cope import ensure_not_iterable
 from Cope.sympy import *
@@ -6,6 +10,7 @@ from src.helper import *
 from src.helper import _solve
 from code_editor import code_editor
 from sympy.matrices.common import ShapeError
+from sympy.plotting import plot, plot3d
 # This handles a very odd error that only comes up every other run
 try:
     from src.parse import parse, get_atoms
@@ -46,6 +51,7 @@ with st.sidebar:
         do_it = st.checkbox('Evaluate Solutions',                   key='do_it',       value=do_simplify, help='This is distinct from simplifying the expression. Simplifying will reduce down to, say, an integral, as opposed to actually evaluating (symbolically) the integral.')
         num_eval = st.checkbox('Give Non-Symbolic Solutions',       key='num_eval',    value=False, help='Evaluate the function numerically instead of symbolically')
         filter_imag = st.checkbox('Only Inlcude Real Solutions', key='filter_imag', value=True,  help='Whether we should include answers with `i` in them or not')
+    do_plot = st.checkbox('Plot the function', key='do_plot')
     do_code = st.checkbox('Include Custom Code Box',             key='do_code',     value=False, help='Adds a code area where we can run Python & sympy code directly on the expression')
     do_check_point = st.empty()
     if st.button('Reset Variables', key='reset_vars', help='Reset all variables back to their Symbols'):
@@ -132,7 +138,7 @@ if expr is not None:
         a, *b, c, d = st.columns([.05] + ([.7/len(vars)]*len(vars)) + [.15, .2])
         a.markdown(f'## {func_name}(')
         for s, v in zip(b, vars):
-            s.text_input(str(v), f'Symbol("{v}")', key=f'{v}_set_to', disabled=st.session_state.disabled == v)
+            s.text_input(str(v), f'{v}', key=f'{v}_set_to', disabled=st.session_state.disabled == v)
         c.markdown('## ) =')
         # The '=' Box
         eq = parse(d.text_input(' ', '0', label_visibility='hidden', key='eq', disabled=st.session_state.disabled == 'eq'))
@@ -191,6 +197,19 @@ if expr is not None:
         copy_solution.code(str(ensure_not_iterable(solution)))
         copy_solution_latex.code(latex(ensure_not_iterable(solution)))
         copy_solution_repr.code(srepr(ensure_not_iterable(solution)))
+
+    # The graph
+    if do_plot:
+        # So it *will* plot it if we've specified some of the variables
+        match len(list(filter(lambda i: isinstance(i, Symbol), vars_dict.values()))):
+            case 1:
+                plot(expr)
+                st.pyplot(plt)
+            case 2:
+                plot3d(expr)
+                st.pyplot(plt)
+            case _:
+                st.toast(':warning: Can\'t plot more than 2 variables')
 
     # Code box
     if do_code:

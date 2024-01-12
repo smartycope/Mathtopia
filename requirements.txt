@@ -5,3 +5,4 @@ streamlit_code_editor
 sympy
 ezregex
 numpy
+matplotlib
