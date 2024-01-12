@@ -36,7 +36,7 @@ for i in range(len(st.session_state.states) + 1):
     l, m, r = right.columns((.45, .1, .45))
     expr = l.text_input(' ', label_visibility='hidden', key=f'{i}_expr')
     m.markdown('# for')
-    condition = r.text_input(' ', label_visibiLity='hidden', key=f'{i}_condition')
+    condition = r.text_input(' ', label_visibility='hidden', key=f'{i}_condition')
     if len(expr) and len(condition):
         states.append((expr, condition))
 

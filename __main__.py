@@ -41,10 +41,11 @@ with st.sidebar:
     interpret_as_latex = st.checkbox('Interpret input as LaTeX', key='interpret_as_latex',       help='The expression box will automatically detect LaTeX code for you. Click this to manually tell it that it is LaTeX, in case the detection doesnt work')
     impl_mul = st.checkbox('Implicit Multiplication',            key='impl_mul',    value=True,  help='Allows you to do things like `3x` and `3(x+1) without throwing errors')
     do_solve = st.checkbox('Solve',                              key='do_solve',    value=True,  help='Whether to solve the equation or not. Helpful if you want to look at things that take a long time to solve, like some integrals.')
-    do_simplify = st.checkbox('Simplify Solution',               key='do_simplify', value=True,  help='This reduces the equation down to its most simple form')
-    do_it = st.checkbox('Evaluate the Solution',                 key='do_it',       value=do_simplify, help='This is distinct from simplifying the expression. Simplifying will reduce down to, say, an integral, as opposed to actually evaluating (symbolically) the integral.')
-    num_eval = st.checkbox('Give a non-symbolic answer',         key='num_eval',    value=False, help='Evaluate the function numerically instead of symbolically')
-    filter_imag = st.checkbox('Filter out Imaginary Solutions',  key='filter_imag', value=True,  help='Whether we should include answers with `i` in them or not')
+    if do_solve:
+        do_simplify = st.checkbox('Simplify Solutions',             key='do_simplify', value=True,  help='This reduces the equation down to its most simple form')
+        do_it = st.checkbox('Evaluate Solutions',                   key='do_it',       value=do_simplify, help='This is distinct from simplifying the expression. Simplifying will reduce down to, say, an integral, as opposed to actually evaluating (symbolically) the integral.')
+        num_eval = st.checkbox('Give Non-Symbolic Solutions',       key='num_eval',    value=False, help='Evaluate the function numerically instead of symbolically')
+        filter_imag = st.checkbox('Only Inlcude Real Solutions', key='filter_imag', value=True,  help='Whether we should include answers with `i` in them or not')
     do_code = st.checkbox('Include Custom Code Box',             key='do_code',     value=False, help='Adds a code area where we can run Python & sympy code directly on the expression')
     do_check_point = st.empty()
     if st.button('Reset Variables', key='reset_vars', help='Reset all variables back to their Symbols'):
