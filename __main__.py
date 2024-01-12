@@ -65,8 +65,9 @@ with st.sidebar:
         left.write('Expanded Code')
         copy_solution_repr = right.empty()
 
-_left, right = st.columns([.2, .95])
-_left.empty()
+func_name_top_line = st.empty()
+func_name_same_line, right = st.columns([.2, .95])
+func_name_same_line.empty()
 
 _ex = st.session_state.get('set_expr') or st.session_state.get('_expr') or ''
 # WHY is this necissary??
@@ -89,7 +90,11 @@ if expr is not None:
         right.caption(f'Catagories: `{tuple(categorize(expr, list(vars)[0]))}`')
 
     # Set the updated vars in the f(x) display at the top
-    _left.markdown(f'# f({", ".join(map(str, vars))})=')
+    func_name = f'# f({", ".join(map(str, vars))})='
+    if len(func_name) > 7:
+        func_name_top_line.markdown(func_name)
+    else:
+        func_name_same_line.markdown(func_name)
 
     st.divider()
 
@@ -185,7 +190,7 @@ if expr is not None:
             ''')
 
 else:
-    _left.markdown('# f()=')
+    func_name_same_line.markdown('# f()=')
 
 
 # P(1 +r/n)^{nt}  compound intrest equation
