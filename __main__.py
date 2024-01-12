@@ -16,15 +16,22 @@ except KeyError:
 
 st.set_page_config(layout='wide')
 
+# Used for the code box
 if 'prev_id' not in st.session_state:
     st.session_state['prev_id'] = -1
+# An iterable of solutions
 if 'solution' not in st.session_state:
     st.session_state['solution'] = None
 # If we DO have it, and it's none, make it '', as well as if we don't have it
+# The raw expression given
 if st.session_state.get('_expr') is None:
     st.session_state['_expr'] = ''
+# A list of all the variables we have (not their values)
 if 'vars' not in st.session_state:
     st.session_state['vars'] = []
+# A Symbol, None, or 'eq' that says what thing we're solving for
+if 'disabled' not in st.session_state:
+    st.session_state['disabled'] = []
 
 # Sidebar configs
 with st.sidebar:
@@ -40,6 +47,9 @@ with st.sidebar:
     filter_imag = st.checkbox('Filter out Imaginary Solutions',  key='filter_imag', value=True,  help='Whether we should include answers with `i` in them or not')
     do_code = st.checkbox('Include Custom Code Box',             key='do_code',     value=False, help='Adds a code area where we can run Python & sympy code directly on the expression')
     do_check_point = st.empty()
+    if st.button('Reset Variables', key='reset_vars', help='Reset all variables back to their Symbols'):
+        for v in st.session_state.vars:
+            st.session_state[f'{v}_set_to'] = f'Symbol("{v}")'
     if num_eval:
         do_round = st.number_input('Round to:', format='%d', value=3, key='do_round')
     else:
@@ -73,7 +83,6 @@ with st.sidebar:
         st.session_state['get_vars_from_vars'] = False
         use_area_box = st.checkbox('Use Text Area Instead of Single Line', key='use_area_box', help='Instead of using a single line to specify the function, use a larger text box')
 
-
 func_name_top_line = st.empty()
 func_name_same_line, right = st.columns([.2, .95])
 func_name_same_line.empty()
@@ -84,8 +93,7 @@ st.session_state['_expr'] = _ex
 if 'set_expr' in st.session_state:
     del st.session_state['set_expr']
 box_type = right.text_area if use_area_box else right.text_input
-print(st.session_state._expr)
-expr = parse(box_type('Expression:', value=_ex, key='_expr'), interpret_as_latex)
+expr = parse(box_type(' ', label_visibility='hidden', value=_ex, key='_expr'), interpret_as_latex)
 
 # This shouldn't be necissary. I have no idea why it is. And it's STILL inconsistent
 # This is for toasting units of constants we've replaced
@@ -94,7 +102,6 @@ if (bread := st.session_state.get('to_toast')) is not None and len(bread):
         print('toasting from main')
         st.toast(bread.pop())
 
-print(expr)
 
 # Do all the things
 if expr is not None:
@@ -110,8 +117,8 @@ if expr is not None:
         right.caption(f'Catagories: `{tuple(categorize(expr, list(vars)[0]))}`')
 
     # Set the updated vars in the f(x) display at the top
-    func_intro = f'# {func_name}({", ".join(map(str, vars))})='
-    if len(func_intro) > 7:
+    func_intro = f'# {func_name}({",".join(map(str, vars))})='
+    if len(func_intro) > 10:
         func_name_top_line.markdown(func_intro)
     else:
         func_name_same_line.markdown(func_intro)
@@ -122,11 +129,12 @@ if expr is not None:
     if len(vars):
         'Solve for:'
         a, *b, c, d = st.columns([.05] + ([.7/len(vars)]*len(vars)) + [.15, .2])
-        a.markdown(f'# {func_name}(')
+        a.markdown(f'## {func_name}(')
         for s, v in zip(b, vars):
-            s.text_input(str(v), f'Symbol("{v}")', key=f'{v}_set_to')
-        c.markdown('# ) =')
-        eq = parse(d.text_input(' ', '0', label_visibility='hidden', key='eq'))
+            s.text_input(str(v), f'Symbol("{v}")', key=f'{v}_set_to', disabled=st.session_state.disabled == v)
+        c.markdown('## ) =')
+        # The '=' Box
+        eq = parse(d.text_input(' ', '0', label_visibility='hidden', key='eq', disabled=st.session_state.disabled == 'eq'))
 
         copy_full_expression.code(func_intro[2:] + str(eq))
 
@@ -157,11 +165,13 @@ if expr is not None:
             except ShapeError as err:
                 st.error(err)
 
-    expr = expr.subs({v: parse(st.session_state[f'{v}_set_to']) for v in vars})
+    vars_dict = {v: parse(st.session_state[f'{v}_set_to']) for v in vars}
+    expr = expr.subs(vars_dict)
 
     # Save the parsed sympy expression, just in case we need it elsewhere
     st.session_state['expr'] = expr
     st.session_state['vars'] = vars
+    st.session_state['vars_dict'] = vars_dict
 
     copy_expression.code(str(expr))
     copy_expression_latex.code(latex(expr))
@@ -219,6 +229,3 @@ if expr is not None:
 
 else:
     func_name_same_line.markdown('# f()=')
-
-
-#   compound intrest equation

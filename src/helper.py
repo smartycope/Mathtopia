@@ -3,14 +3,20 @@ from sympy import *
 from Cope import ensure_not_iterable
 
 def _solve(expr, eq):
+    # Reset this
+    st.session_state['disabled'] = None
+
     # If it's a Matrix, don't solve it, main will handle it
     if isinstance(expr, MatrixBase):
         return expr
 
-    sol = solve(Eq(expr, eq))
+    sol = solve(Eq(expr, eq), dict=True)
     # If we've passed parameters, there's nothing to solve, just return expr verbatim
     if not len(sol):
-        sol = [expr]
+        fake_func_call = f'{st.session_state.func_name}({",".join(map(str, st.session_state.vars_dict.values()))})'
+        sol = [{Symbol(fake_func_call): expr}]
+
+    # print(sol)
 
     if st.session_state.do_it:
         simplified = [i.doit() for i in sol if hasattr(i, 'doit')]
@@ -56,12 +62,15 @@ def _solve(expr, eq):
 
 def show_sympy(expr):
     if isinstance(expr, (Dict, dict)):
-        st.write(ensure_not_iterable(expr.keys()))
+        # print('here')
+        left, mid, right = st.columns((.2, .05, .65))
+        left.write(ensure_not_iterable(expr.keys()))
+        mid.write('#### =')
         tmp = ensure_not_iterable(expr.values())
         if isinstance(tmp, MatrixBase):
-            st.dataframe(matrix2numpy(expr), hide_index=True, column_config={str(cnt): st.column_config.TextColumn(default='0', label='') for cnt in range(len(expr))})
+            right.dataframe(matrix2numpy(expr), hide_index=True, column_config={str(cnt): st.column_config.TextColumn(default='0', label='') for cnt in range(len(expr))})
         else:
-            st.write(tmp)
+            right.write(tmp)
     else:
         if isinstance(expr, MatrixBase):
             st.dataframe(matrix2numpy(expr), hide_index=True, column_config={str(cnt): st.column_config.TextColumn(default='0', label='') for cnt in range(len(expr))})

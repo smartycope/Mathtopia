@@ -26,7 +26,7 @@ def run_code(code, rtn_tab, output_tab, errors_tab):
         expr = st.session_state.expr
         solution = st.session_state.solution
         equals = st.session_state.eq
-        vars = st.session_state.vars
+        vars = st.session_state.vars_dict
 
         _locals = locals()
         with RedirectStd(stdout=std, stderr=err):
