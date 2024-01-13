@@ -5,11 +5,10 @@ from Cope import ensure_not_iterable
 import decimal
 from decimal import Decimal as D
 
-def dround(d, ndigits, rounding=decimal.ROUND_HALF_UP):
-    result = D(str(d)).quantize(D('0.1')**ndigits, rounding=rounding)
-    result = sympify(result)  # if you want a SymPy Float
-    return result
-
+if 'num_eval' not in st.session_state:
+    st.session_state['num_eval'] = False
+if 'vars' not in st.session_state:
+    st.session_state['vars'] = []
 
 def _solve(expr, eq):
     # Reset this

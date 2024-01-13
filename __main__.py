@@ -11,6 +11,7 @@ from src.helper import _solve
 from code_editor import code_editor
 from sympy.matrices.common import ShapeError
 from sympy.plotting import plot, plot3d
+
 # This handles a very odd error that only comes up every other run
 try:
     from src.parse import parse, get_atoms
@@ -96,8 +97,8 @@ func_name_same_line, right = st.columns([.2, .95])
 func_name_same_line.empty()
 
 _ex = st.session_state.get('set_expr') or st.session_state.get('_expr') or ''
-# WHY is this necissary??
-# st.session_state['_expr'] = _ex
+# This is necissary so pages fill the main box properly for some reason
+st.session_state['_expr'] = _ex
 if 'set_expr' in st.session_state:
     del st.session_state['set_expr']
 box_type = right.text_area if use_area_box else right.text_input
@@ -203,6 +204,8 @@ if expr is not None:
     if do_plot:
         # So it *will* plot it if we've specified some of the variables
         match len(list(filter(lambda i: isinstance(i, Symbol), vars_dict.values()))):
+            case 0:
+                st.toast(':warning: Can\'t plot 0 variables')
             case 1:
                 plot(expr)
                 st.pyplot(plt)
