@@ -2,6 +2,7 @@ import streamlit as st
 from Cope import RedirectStd, ensure_iterable
 from src.funcs import *
 import io
+from src.helper import show_sympy
 
 
 def formatInput2code(s):
@@ -37,7 +38,13 @@ def run_code(code, rtn_tab, output_tab, errors_tab):
             else:
                 rtn = _locals.get('_rtn')
                 if rtn is not None:
-                    for i in ensure_iterable(rtn):
-                        rtn_tab.write(i)
+                    if isinstance(rtn, (Dict, dict)):
+                        # rtn_tab.write(rtn)
+                        show_sympy(rtn, rtn_tab)
+                        # rtn_tab.
+                    else:
+                        for i in ensure_iterable(rtn):
+                            # rtn_tab.write(i)
+                            show_sympy(i, rtn_tab)
                 output_tab.write(std.read())
                 errors_tab.write(err.read())

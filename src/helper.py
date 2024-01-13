@@ -2,6 +2,14 @@ import streamlit as st
 import matplotlib.pyplot as plt
 from sympy import *
 from Cope import ensure_not_iterable
+import decimal
+from decimal import Decimal as D
+
+def dround(d, ndigits, rounding=decimal.ROUND_HALF_UP):
+    result = D(str(d)).quantize(D('0.1')**ndigits, rounding=rounding)
+    result = sympify(result)  # if you want a SymPy Float
+    return result
+
 
 def _solve(expr, eq):
     # Reset this
@@ -37,8 +45,10 @@ def _solve(expr, eq):
         if isinstance(s, (Dict, dict)):
             if st.session_state.num_eval:
                 try:
+                    print(st.session_state.do_round)
                     new_sol.append({key: round(N(val), st.session_state.do_round) for key, val in s.items()})
-                except TypeError:
+                except TypeError as err:
+                    print(err)
                     new_sol.append({key: N(val) for key, val in s.items()})
             else:
                 new_sol.append(s)
@@ -46,10 +56,12 @@ def _solve(expr, eq):
             if st.session_state.num_eval:
                 try:
                     new_sol.append(round(N(s), st.session_state.do_round))
-                except TypeError:
+                except TypeError as err:
+                    print(err)
                     new_sol.append(N(s))
             else:
                 new_sol.append(s)
+    print(new_sol)
 
     if st.session_state.filter_imag:
         real = list(filter(lambda i: I not in (i.atoms() if not isinstance(i, (Dict, dict)) else list(i.values())[0].atoms()), sol))
@@ -59,24 +71,38 @@ def _solve(expr, eq):
             if len(sol) != len(real):
                 st.toast('Imaginary Solutions Hidden')
             sol = real
+        elif len(sol) != len(real):
+            st.toast('Only imaginary solutions available')
     return sol
 
-def show_sympy(expr):
+def show_sympy(expr, to=st):
     if isinstance(expr, (Dict, dict)):
         # print('here')
-        left, mid, right = st.columns((.2, .05, .65))
+        left, mid, right = to.columns((.2, .05, .65))
         left.write(ensure_not_iterable(expr.keys()))
         mid.write('#### =')
         tmp = ensure_not_iterable(expr.values())
         if isinstance(tmp, MatrixBase):
-            right.dataframe(matrix2numpy(expr), hide_index=True, column_config={str(cnt): st.column_config.TextColumn(default='0', label='') for cnt in range(len(expr))})
+            right.dataframe(matrix2numpy(expr), hide_index=True, column_config={str(cnt): to.column_config.TextColumn(default='0', label='') for cnt in range(len(expr))})
         else:
-            right.write(tmp)
+            if st.session_state.num_eval:
+                try:
+                    right.write(round(tmp, st.session_state.do_round))
+                except:
+                    right.write(tmp)
+            else:
+                right.write(tmp)
     else:
         if isinstance(expr, MatrixBase):
-            st.dataframe(matrix2numpy(expr), hide_index=True, column_config={str(cnt): st.column_config.TextColumn(default='0', label='') for cnt in range(len(expr))})
+            to.dataframe(matrix2numpy(expr), hide_index=True, column_config={str(cnt): to.column_config.TextColumn(default='0', label='') for cnt in range(len(expr))})
         else:
-            st.write(expr)
+            if st.session_state.num_eval:
+                try:
+                    to.write(round(expr, st.session_state.do_round))
+                except:
+                    to.write(expr)
+            else:
+                to.write(expr)
 
 def split_matrix(mat):
     bulk = mat[:mat.cols-1, :mat.cols-1]

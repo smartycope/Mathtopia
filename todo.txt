@@ -1,2 +1,5 @@
-rounding isn't working
-    to test: 1.01L^{0.75}K^{0.25}, L=400, K=650
+TRIANGLE SOLVER
+PRODUCTS
+SLOPE EQUATION
+MASTER SOLVE?
+UNITS?

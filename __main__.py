@@ -50,17 +50,18 @@ with st.sidebar:
         do_simplify = st.checkbox('Simplify Solutions',             key='do_simplify', value=True,  help='This reduces the equation down to its most simple form')
         do_it = st.checkbox('Evaluate Solutions',                   key='do_it',       value=do_simplify, help='This is distinct from simplifying the expression. Simplifying will reduce down to, say, an integral, as opposed to actually evaluating (symbolically) the integral.')
         num_eval = st.checkbox('Give Non-Symbolic Solutions',       key='num_eval',    value=False, help='Evaluate the function numerically instead of symbolically')
+        _do_round = st.empty()
         filter_imag = st.checkbox('Only Inlcude Real Solutions', key='filter_imag', value=True,  help='Whether we should include answers with `i` in them or not')
-    do_plot = st.checkbox('Plot the function', key='do_plot')
+    do_plot = st.checkbox('Plot the function', key='do_plot', help='Only 1 and 2 unknowns can be plotted')
     do_code = st.checkbox('Include Custom Code Box',             key='do_code',     value=False, help='Adds a code area where we can run Python & sympy code directly on the expression')
     do_check_point = st.empty()
     if st.button('Reset Variables', key='reset_vars', help='Reset all variables back to their Symbols'):
         for v in st.session_state.vars:
             st.session_state[f'{v}_set_to'] = f'Symbol("{v}")'
-    if num_eval:
-        do_round = st.number_input('Round to:', format='%d', value=3, key='do_round')
+    if do_solve and num_eval:
+        do_round = _do_round.number_input('Round to:', format='%d', value=3, key='do_round')
     else:
-        st.session_state['do_round'] = 10
+        st.session_state['do_round'] = 3
 
     with st.expander('Copy', False):
         left, right = st.columns(2)
@@ -96,7 +97,7 @@ func_name_same_line.empty()
 
 _ex = st.session_state.get('set_expr') or st.session_state.get('_expr') or ''
 # WHY is this necissary??
-st.session_state['_expr'] = _ex
+# st.session_state['_expr'] = _ex
 if 'set_expr' in st.session_state:
     del st.session_state['set_expr']
 box_type = right.text_area if use_area_box else right.text_input
