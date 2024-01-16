@@ -135,6 +135,7 @@ if expr is not None:
     st.divider()
 
     # The f(inputs) box
+    eq = 0
     if len(vars):
         'Solve for:'
         a, *b, c, d = st.columns([.05] + ([.7/len(vars)]*len(vars)) + [.15, .2])
@@ -192,7 +193,7 @@ if expr is not None:
     # Display the solutions
     if do_solve and len(vars):
         with st.expander('Solutions', True):
-            solution = _solve(expr, eq)
+            solution = _solve(expr, eq or S(0))
             st.session_state['solution'] = solution
             for i in solution:
                 show_sympy(i)

@@ -26,6 +26,7 @@ def _solve(expr, eq):
 
     # If we've passed parameters, there's nothing to solve, just return expr verbatim
     if not len(sol):
+        # Make a Symbol that looks like a function call, for when we display it in the solutions box
         fake_func_call = f'{st.session_state.func_name}({",".join(map(str, st.session_state.vars_dict.values()))})'
         sol = [{Symbol(fake_func_call): expr}]
 
