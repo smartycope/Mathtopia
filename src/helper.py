@@ -12,9 +12,6 @@ if 'vars' not in st.session_state:
     st.session_state['vars'] = []
 
 def _solve(expr, eq):
-    # Reset this
-    st.session_state['disabled'] = None
-
     # If it's a Matrix, don't solve it, main will handle it
     if isinstance(expr, MatrixBase):
         return expr

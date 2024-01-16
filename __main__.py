@@ -35,9 +35,6 @@ if st.session_state.get('_expr') is None:
 # A list of all the variables we have (not their values)
 if 'vars' not in st.session_state:
     st.session_state['vars'] = []
-# A Symbol, None, or 'eq' that says what thing we're solving for
-if 'disabled' not in st.session_state:
-    st.session_state['disabled'] = []
 
 # Sidebar configs
 with st.sidebar:
@@ -144,10 +141,10 @@ if expr is not None:
             value = str(v)
             if 'vars_dict' in st.session_state and v in st.session_state['vars_dict']:
                 value = st.session_state['vars_dict'][v]
-            s.text_input(str(v), value, key=f'{v}_set_to', disabled=st.session_state.disabled == v)
+            s.text_input(str(v), value, key=f'{v}_set_to')
         c.markdown('## ) =')
         # The '=' Box
-        eq = parse(d.text_input(' ', st.session_state.get('eq') or '0', label_visibility='hidden', key='eq', disabled=st.session_state.disabled == 'eq'))
+        eq = parse(d.text_input(' ', st.session_state.get('eq') or '0', label_visibility='hidden', key='eq'))
 
         copy_full_expression.code(func_intro[2:] + str(eq))
 
