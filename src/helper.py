@@ -4,6 +4,7 @@ from sympy import *
 from Cope import ensure_not_iterable
 import decimal
 from decimal import Decimal as D
+from src.parse import get_atoms
 
 if 'num_eval' not in st.session_state:
     st.session_state['num_eval'] = False
@@ -18,13 +19,15 @@ def _solve(expr, eq):
     if isinstance(expr, MatrixBase):
         return expr
 
-    sol = solve(Eq(expr, eq), dict=True)
+    # Solve for *all* the variables, not just a random one
+    sol = []
+    for var in (get_atoms(expr) + get_atoms(eq)):
+        sol += solve(Eq(expr, eq), var, dict=True, simplify=st.session_state.do_simplify)
+
     # If we've passed parameters, there's nothing to solve, just return expr verbatim
     if not len(sol):
         fake_func_call = f'{st.session_state.func_name}({",".join(map(str, st.session_state.vars_dict.values()))})'
         sol = [{Symbol(fake_func_call): expr}]
-
-    # print(sol)
 
     if st.session_state.do_it:
         simplified = [i.doit() for i in sol if hasattr(i, 'doit')]
