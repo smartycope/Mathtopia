@@ -141,7 +141,7 @@ if expr is not None:
         a.markdown(f'## {func_name}(')
         for s, v in zip(b, vars):
             value = str(v)
-            if 'vars_dict' in st.session_state:
+            if 'vars_dict' in st.session_state and v in st.session_state['vars_dict']:
                 value = st.session_state['vars_dict'][v]
             s.text_input(str(v), value, key=f'{v}_set_to', disabled=st.session_state.disabled == v)
         c.markdown('## ) =')
