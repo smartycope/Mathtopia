@@ -10,7 +10,7 @@ st.set_page_config(layout='centered')
 # Save the main UI state so we can come back to it
 st.session_state['_expr'] = st.session_state.get('_expr')
 st.session_state['eq'] = st.session_state.get('eq')
-st.session_state['vars'] = st.session_state.get('vars')
+st.session_state['vars_dict'] = st.session_state.get('vars_dict')
 
 _grid = grid([1, 1, 2], [4, 1, 1], [1, 1, 2], vertical_align="bottom")
 
@@ -19,7 +19,7 @@ to = _grid.text_input('To:')
 _grid.empty()
 _grid.image('assets/integral.png', width=200)
 func = _grid.text_input('Func:', st.session_state.get('_expr'))
-var = _grid.text_input('Var:', st.session_state.vars[0] if len(st.session_state.vars) == 1 else '')
+var = _grid.text_input('Var:', list(st.session_state.vars_dict.keys())[0] if len(st.session_state.vars_dict.keys()) == 1 else '')
 _grid.empty()
 from_ = _grid.text_input('From:')
 

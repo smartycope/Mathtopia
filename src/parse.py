@@ -105,19 +105,6 @@ def get_atoms(expr):
     # Old code that works, but I feel like the above line is better
     atoms = set()
 
-    if st.session_state.get_vars_from_vars:
-        # TODO
-        NotImplemented
-        #* Get any variables that are exclusively defined in the variable setter, and add them to atoms
-        # iterate through the variables that have been changed
-        # for i in filter(lambda x: x.valueChanged, self.vars):
-        #     # Get that atoms in the value of i
-        #     atoms = atoms.union(i.value.atoms(*self.varTypes+self.funcTypes))
-        #     funcs = set()
-        #     for func in i.value.atoms(*self.funcTypes):
-        #         funcs = funcs.union((type(func),))
-        #     atoms = atoms.union(funcs)
-
     #* Get the atoms in the input equation
     atoms = atoms.union(expr.atoms(*varTypes))
     funcs = set()
@@ -135,25 +122,6 @@ def get_atoms(expr):
     atoms = set(atoms)
 
     return atoms
-
-# def updateVars(expr):
-    # atoms = _getAtoms(expr)
-
-    # #* Get all the things in atoms that aren't already in self.vars and add them
-    # # Get a set of the symbols in self.vars
-    # curSymbols = set([v.symbol for v in self.vars])
-    # for s in atoms.difference(curSymbols):
-    #     # If it's likely a unit, fill it with that first
-    #     self.vars.append(Variable(s))
-
-    # #* Now get all the things in self.vars that aren't in atoms and delete them
-    # if not self.options.rememberVarNames.isChecked():
-    #     for s in curSymbols.difference(atoms):
-    #         del self.vars[getIndexWith(self.vars, lambda x: x.symbol == s)]
-
-    # #* Double check that this is a set, and not a list (no duplicates)
-    # # But varHandler wants a list, I guess
-    # self.vars = sorted(list(set(self.vars)), key=lambda var: var.name)
 
 def parse(text, manual_latex=False, replace_constants=True) -> Expr:
     # Not technically necissary, unless they bookmark a page that uses parse

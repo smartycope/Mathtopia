@@ -6,7 +6,7 @@ from streamlit_extras.switch_page_button import switch_page
 # Save the main UI state so we can come back to it
 st.session_state['_expr'] = st.session_state.get('_expr')
 st.session_state['eq'] = st.session_state.get('eq')
-st.session_state['vars'] = st.session_state.get('vars')
+st.session_state['vars_dict'] = st.session_state.get('vars_dict')
 
 def eq(expr):
     if st.button(expr):

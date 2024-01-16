@@ -30,6 +30,7 @@ def run_code(code, rtn_tab, output_tab, errors_tab):
         vars = st.session_state.vars_dict
 
         _locals = locals()
+        _locals[st.session_state.func_name] = lambda *args: expr.subs(vars)
         with RedirectStd(stdout=std, stderr=err):
             try:
                 exec(formatInput2code(code), globals(), _locals)

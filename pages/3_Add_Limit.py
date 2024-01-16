@@ -9,14 +9,14 @@ st.set_page_config(layout='centered')
 # Save the main UI state so we can come back to it
 st.session_state['_expr'] = st.session_state.get('_expr')
 st.session_state['eq'] = st.session_state.get('eq')
-st.session_state['vars'] = st.session_state.get('vars')
+st.session_state['vars_dict'] = st.session_state.get('vars_dict')
 
 _, left, right = st.columns([.4, .1, .5])
 left.markdown('# lim')
 expr = right.text_input('Expression', st.session_state.get('_expr'))
 
 left, mid, right = st.columns((.45, .1, .45))
-var = left.text_input('Var', st.session_state.vars[0] if len(st.session_state.vars) == 1 else '')
+var = left.text_input('Var', list(st.session_state.vars_dict.keys())[0] if len(st.session_state.vars_dict.keys()) == 1 else '')
 mid.markdown('# ->')
 to = right.text_input('To')
 

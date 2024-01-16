@@ -10,7 +10,7 @@ from src.helper import show_sympy
 # Save the main UI state so we can come back to it
 st.session_state['_expr'] = st.session_state.get('_expr')
 st.session_state['eq'] = st.session_state.get('eq')
-st.session_state['vars'] = st.session_state.get('vars')
+st.session_state['vars_dict'] = st.session_state.get('vars_dict')
 
 if 'states' not in st.session_state:
     st.session_state['states'] = []

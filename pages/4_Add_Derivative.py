@@ -8,7 +8,10 @@ from src.helper import show_sympy
 # Save the main UI state so we can come back to it
 st.session_state['_expr'] = st.session_state.get('_expr')
 st.session_state['eq'] = st.session_state.get('eq')
-st.session_state['vars'] = st.session_state.get('vars')
+st.session_state['vars_dict'] = st.session_state.get('vars_dict')
+
+if 'num_eval' not in st.session_state:
+    st.session_state['num_eval'] = False
 
 st.set_page_config(layout='centered')
 
@@ -22,7 +25,7 @@ _grid.empty()
 func = _grid.text_input('Func:', st.session_state.get('_expr'))
 
 _grid.image('assets/partial_derivative.png', width=100)
-var = _grid.text_input('Var:', st.session_state.vars[0] if len(st.session_state.vars) == 1 else '')
+var = _grid.text_input('Var:', list(st.session_state.vars_dict.keys())[0] if len(st.session_state.vars_dict.keys()) == 1 else '')
 
 if (func is not None and len(func) and var is not None and len(var)):
     st.divider()

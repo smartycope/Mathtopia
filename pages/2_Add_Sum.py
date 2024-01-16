@@ -10,12 +10,11 @@ st.session_state['_expr'] = st.session_state.get('_expr')
 
 if 'num_eval' not in st.session_state:
     st.session_state['num_eval'] = False
-if 'vars' not in st.session_state:
-    st.session_state['vars'] = False
+
 # Save the main UI state so we can come back to it
 st.session_state['_expr'] = st.session_state.get('_expr')
 st.session_state['eq'] = st.session_state.get('eq')
-st.session_state['vars'] = st.session_state.get('vars')
+st.session_state['vars_dict'] = st.session_state.get('vars_dict')
 
 
 
@@ -29,7 +28,7 @@ _grid.image('assets/sum_image.png' if mode == 'Sum' else 'assets/product.png', w
 
 expr = _grid.text_input('Expression', st.session_state.get('_expr'))
 # left, mid, right = st.columns([.45, .1, .45])
-var = _grid.text_input('Variable', st.session_state.vars[0] if len(st.session_state.vars) == 1 else '')
+var = _grid.text_input('Variable', list(st.session_state.vars_dict.keys())[0] if len(st.session_state.vars_dict.keys()) == 1 else '')
 _grid.markdown('# =')
 start = _grid.text_input('Start')
 

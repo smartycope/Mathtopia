@@ -11,6 +11,7 @@ from src.helper import _solve
 from code_editor import code_editor
 from sympy.matrices.common import ShapeError
 from sympy.plotting import plot, plot3d
+from src.SS import SS
 
 # This handles a very odd error that only comes up every other run
 try:
@@ -22,10 +23,16 @@ except KeyError:
 
 st.set_page_config(layout='wide')
 
+ss = SS({
+    # 'prev_id': -1,
+    # 'solution': None,
+    # 'vars_dict': {},
+})
+
 # Used for the code box
 if 'prev_id' not in st.session_state:
     st.session_state['prev_id'] = -1
-# An iterable of solutions
+# # An iterable of solutions
 if 'solution' not in st.session_state:
     st.session_state['solution'] = None
 # If we DO have it, and it's none, make it '', as well as if we don't have it
@@ -33,8 +40,21 @@ if 'solution' not in st.session_state:
 if st.session_state.get('_expr') is None:
     st.session_state['_expr'] = ''
 # A list of all the variables we have (not their values)
-if 'vars' not in st.session_state:
-    st.session_state['vars'] = []
+# if 'vars' not in st.session_state:
+#     st.session_state['vars'] = []
+# Disable eq if we've provided all the parameters
+if 'disable_eq' not in st.session_state:
+    st.session_state['disable_eq'] = False
+# if 'vars_dict' not in st.session_state:
+    # st.session_state['vars_dict'] = {}
+if 'prev_vars_dict' not in st.session_state:
+    st.session_state['prev_vars_dict'] = {}
+
+vars_dict_changed = st.session_state['prev_vars_dict'] != st.session_state['vars_dict']
+
+print(vars_dict_changed)
+
+print(st.session_state['vars_dict'])
 
 # Sidebar configs
 with st.sidebar:
@@ -54,7 +74,7 @@ with st.sidebar:
     do_code = st.checkbox('Include Custom Code Box',             key='do_code',     value=False, help='Adds a code area where we can run Python & sympy code directly on the expression')
     do_check_point = st.empty()
     if st.button('Reset Variables', key='reset_vars', help='Reset all variables back to their Symbols'):
-        for v in st.session_state.vars:
+        for v in st.session_state.vars_dict.keys():
             st.session_state[f'{v}_set_to'] = f'Symbol("{v}")'
     if do_solve and num_eval:
         do_round = _do_round.number_input('Round to:', format='%d', value=3, key='do_round')
@@ -85,8 +105,7 @@ with st.sidebar:
         copy_full_expression = right.empty()
 
     with st.expander('Advanced Options'):
-        # get_vars_from_vars = st.checkbox('Get variables from set variables', key='get_vars_from_vars')
-        st.session_state['get_vars_from_vars'] = False
+        do_ui_reset = st.checkbox('Reset UI when a new expression is given', key='do_ui_reset', value=True, help='Reset the variables provided and the equals expression provided whenever the function is changed')
         use_area_box = st.checkbox('Use Text Area Instead of Single Line', key='use_area_box', help='Instead of using a single line to specify the function, use a larger text box')
 
 func_name_top_line = st.empty()
@@ -99,7 +118,7 @@ st.session_state['_expr'] = _ex
 if 'set_expr' in st.session_state:
     del st.session_state['set_expr']
 box_type = right.text_area if use_area_box else right.text_input
-expr = parse(box_type(' ', label_visibility='hidden', value=_ex, key='_expr'), interpret_as_latex)
+expr = parse(box_type(' ', label_visibility='hidden', value=_ex, key='_expr', on_change=reset_ui), interpret_as_latex)
 
 # This shouldn't be necissary. I have no idea why it is. And it's STILL inconsistent
 # This is for toasting units of constants we've replaced
@@ -139,12 +158,19 @@ if expr is not None:
         a.markdown(f'## {func_name}(')
         for s, v in zip(b, vars):
             value = str(v)
-            if 'vars_dict' in st.session_state and v in st.session_state['vars_dict']:
-                value = st.session_state['vars_dict'][v]
-            s.text_input(str(v), value, key=f'{v}_set_to')
+            if 'vars_dict' in st.session_state and v in st.session_state['vars_dict'] and vars_dict_changed:
+                value = str(st.session_state['vars_dict'][v])
+                # If it's emtpy, refill it to the default var name
+                if value == 'None' or not len(value):
+                    value = str(v)
+            # Delete whatever we had before just before we reset, so we don't set ourselves to the previous var
+            def delete_var(var):
+                return
+                del st.session_state['vars_dict'][var]
+            s.text_input(str(v), value, key=f'{v}_set_to', on_change=delete_var, args=(v,))
         c.markdown('## ) =')
         # The '=' Box
-        eq = parse(d.text_input(' ', st.session_state.get('eq') or '0', label_visibility='hidden', key='eq'))
+        eq = parse(d.text_input(' ', st.session_state['disable_eq'] if st.session_state['disable_eq'] else (st.session_state.get('eq') or '0'), key='eq', disabled=bool(st.session_state['disable_eq']), label_visibility='hidden'))
 
         copy_full_expression.code(func_intro[2:] + str(eq))
 
@@ -180,8 +206,9 @@ if expr is not None:
 
     # Save the parsed sympy expression, just in case we need it elsewhere
     st.session_state['expr'] = expr
-    st.session_state['vars'] = vars
+    # st.session_state['vars'] = vars
     st.session_state['vars_dict'] = vars_dict
+    st.session_state['prev_vars_dict'] = st.session_state['vars_dict']
 
     copy_expression.code(str(expr))
     copy_expression_latex.code(latex(expr))

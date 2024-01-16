@@ -8,8 +8,8 @@ from src.parse import get_atoms
 
 if 'num_eval' not in st.session_state:
     st.session_state['num_eval'] = False
-if 'vars' not in st.session_state:
-    st.session_state['vars'] = []
+if 'vars_dict' not in st.session_state:
+    st.session_state['vars_dict'] = {}
 
 def _solve(expr, eq):
     # If it's a Matrix, don't solve it, main will handle it
@@ -26,6 +26,19 @@ def _solve(expr, eq):
         # Make a Symbol that looks like a function call, for when we display it in the solutions box
         fake_func_call = f'{st.session_state.func_name}({",".join(map(str, st.session_state.vars_dict.values()))})'
         sol = [{Symbol(fake_func_call): expr}]
+        if st.session_state.get('disable_eq') is False:
+            st.session_state['disable_eq'] = str(expr)
+            # We have to rerun once here (and in the else statement below) so the UI will immediately
+            # reflect the change we've made here
+            # In addition, we only want to rerun if we've made a change, otherwise we get stuck in an
+            # Infinite loop
+            st.rerun()
+    else:
+        # is not False here, it gets set to a string when true
+        if st.session_state.get('disable_eq') is not False:
+            st.session_state['disable_eq'] = False
+            st.rerun()
+
 
     if st.session_state.do_it:
         simplified = [i.doit() for i in sol if hasattr(i, 'doit')]
@@ -45,10 +58,8 @@ def _solve(expr, eq):
         if isinstance(s, (Dict, dict)):
             if st.session_state.num_eval:
                 try:
-                    print(st.session_state.do_round)
                     new_sol.append({key: round(N(val), st.session_state.do_round) for key, val in s.items()})
                 except TypeError as err:
-                    print(err)
                     new_sol.append({key: N(val) for key, val in s.items()})
             else:
                 new_sol.append(s)
@@ -57,11 +68,9 @@ def _solve(expr, eq):
                 try:
                     new_sol.append(round(N(s), st.session_state.do_round))
                 except TypeError as err:
-                    print(err)
                     new_sol.append(N(s))
             else:
                 new_sol.append(s)
-    print(new_sol)
 
     if st.session_state.filter_imag:
         real = list(filter(lambda i: I not in (i.atoms() if not isinstance(i, (Dict, dict)) else list(i.values())[0].atoms()), sol))
@@ -103,6 +112,13 @@ def show_sympy(expr, to=st):
                     to.write(expr)
             else:
                 to.write(expr)
+
+def reset_ui():
+    """ Reset all the vars and the equal box, because we have a new expression provided """
+    if st.session_state['do_ui_reset']:
+        st.session_state['vars_dict'] = {}
+        st.session_state['eq'] = '0'
+        st.session_state['disable_eq'] = False
 
 def split_matrix(mat):
     bulk = mat[:mat.cols-1, :mat.cols-1]
