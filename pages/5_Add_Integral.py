@@ -7,9 +7,12 @@ from src.helper import show_sympy
 
 st.set_page_config(layout='centered')
 
-_grid = grid([1, 1, 2], [4, 1, 1], [1, 1, 2], vertical_align="bottom")
-
+# Save the main UI state so we can come back to it
 st.session_state['_expr'] = st.session_state.get('_expr')
+st.session_state['eq'] = st.session_state.get('eq')
+st.session_state['vars'] = st.session_state.get('vars')
+
+_grid = grid([1, 1, 2], [4, 1, 1], [1, 1, 2], vertical_align="bottom")
 
 _grid.empty()
 to = _grid.text_input('To:')

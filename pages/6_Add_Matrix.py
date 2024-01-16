@@ -5,6 +5,11 @@ from src.parse import parse
 
 st.set_page_config(layout='centered')
 
+# Save the main UI state so we can come back to it
+st.session_state['_expr'] = st.session_state.get('_expr')
+st.session_state['eq'] = st.session_state.get('eq')
+st.session_state['vars'] = st.session_state.get('vars')
+
 left, right = st.columns(2)
 cols = right.number_input('Columns', value=3, min_value=1)
 rows = left.number_input('Rows', value=3, min_value=1)

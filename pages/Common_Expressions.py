@@ -3,6 +3,11 @@ from streamlit_extras.switch_page_button import switch_page
 # from src.helper import show_sympy
 # from src.parse import parse
 
+# Save the main UI state so we can come back to it
+st.session_state['_expr'] = st.session_state.get('_expr')
+st.session_state['eq'] = st.session_state.get('eq')
+st.session_state['vars'] = st.session_state.get('vars')
+
 def eq(expr):
     if st.button(expr):
         st.session_state['set_expr'] = expr

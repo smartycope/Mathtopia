@@ -5,44 +5,61 @@ from src.parse import parse
 from copy import copy
 from sympy import N
 
+# Save the main UI state so we can come back to it
+st.session_state['_expr'] = st.session_state.get('_expr')
+st.session_state['eq'] = st.session_state.get('eq')
+st.session_state['vars'] = st.session_state.get('vars')
 
 st.set_page_config(layout='wide')
 st.session_state['square'] = '90'
+invalid = False
 
-eval_num = st.checkbox('Evaluate Non-Symbolically', key='eval_num')
+if 'user_inputted' not in st.session_state:
+    st.session_state['user_inputted'] = []
+
+left, mid, right = st.columns(3)
+# This is DIFFERENT from num_eval, by intent. Don't get them confused.
+eval_num = left.checkbox('Evaluate Non-Symbolically', key='eval_num')
 eval_num_changed = st.session_state.get('prev_eval_num') != eval_num
 st.session_state['prev_eval_num'] = eval_num
+
+if eval_num:
+    rnd = right.number_input('Round to:', value=3)
+
+reset = mid.button('Reset All') or eval_num_changed
 
 left, mid, right = st.columns([.3, .4, .3])
 mid.image('assets/triangle.png')
 
 
-if 'top_left' not in st.session_state:     st.session_state['top_left']     = ''
-if 'top_right' not in st.session_state:    st.session_state['top_right']    = ''
-if 'bottom_left' not in st.session_state:  st.session_state['bottom_left']  = ''
-if 'bottom_right' not in st.session_state: st.session_state['bottom_right'] = ''
-if 'left_side' not in st.session_state:    st.session_state['left_side']    = ''
-if 'right_side' not in st.session_state:   st.session_state['right_side']   = ''
-if 'left_width' not in st.session_state:   st.session_state['left_width']   = ''
-if 'right_width' not in st.session_state:  st.session_state['right_width']  = ''
-if 'top_center' not in st.session_state:   st.session_state['top_center']   = ''
-if 'height' not in st.session_state:       st.session_state['height']       = ''
-if 'total_width' not in st.session_state:  st.session_state['total_width']  = ''
+if 'top_left'     not in st.session_state or reset:     st.session_state['top_left'] = ''
+if 'top_right'    not in st.session_state or reset:    st.session_state['top_right'] = ''
+if 'bottom_left'  not in st.session_state or reset:  st.session_state['bottom_left'] = ''
+if 'bottom_right' not in st.session_state or reset: st.session_state['bottom_right'] = ''
+if 'left_side'    not in st.session_state or reset:    st.session_state['left_side'] = ''
+if 'right_side'   not in st.session_state or reset:   st.session_state['right_side'] = ''
+if 'left_width'   not in st.session_state or reset:   st.session_state['left_width'] = ''
+if 'right_width'  not in st.session_state or reset:  st.session_state['right_width'] = ''
+if 'top_center'   not in st.session_state or reset:   st.session_state['top_center'] = ''
+if 'height'       not in st.session_state or reset:       st.session_state['height'] = ''
+if 'total_width'  not in st.session_state or reset:  st.session_state['total_width'] = ''
 
+def set_as_user_inputted(name):
+    st.session_state['user_inputted'].append(name)
 
-top_left     = left.text_input('Top Left',      st.session_state['top_left'],     key='_top_left');     st.session_state['top_left']     = top_left
-top_right    = right.text_input('Top Right',    st.session_state['top_right'],    key='_top_right');    st.session_state['top_right']    = top_right
-bottom_left  = left.text_input('Bottom Left',   st.session_state['bottom_left'],  key='_bottom_left');  st.session_state['bottom_left']  = bottom_left
-bottom_right = right.text_input('Bottom Right', st.session_state['bottom_right'], key='_bottom_right'); st.session_state['bottom_right'] = bottom_right
+top_left     = left.text_input('Top Left',      st.session_state['top_left'],     on_change=lambda: set_as_user_inputted('top_left'), key='_top_left');     st.session_state['top_left']     = top_left
+top_right    = right.text_input('Top Right',    st.session_state['top_right'],    on_change=lambda: set_as_user_inputted('top_right'), key='_top_right');    st.session_state['top_right']    = top_right
+bottom_left  = left.text_input('Bottom Left',   st.session_state['bottom_left'],  on_change=lambda: set_as_user_inputted('bottom_left'), key='_bottom_left');  st.session_state['bottom_left']  = bottom_left
+bottom_right = right.text_input('Bottom Right', st.session_state['bottom_right'], on_change=lambda: set_as_user_inputted('bottom_right'), key='_bottom_right'); st.session_state['bottom_right'] = bottom_right
 
-left_side    = left.text_input('Left Side',     st.session_state['left_side'],    key='_left_side');    st.session_state['left_side']    = left_side
-right_side   = right.text_input('Right Side',   st.session_state['right_side'],   key='_right_side');   st.session_state['right_side']   = right_side
-left_width   = left.text_input('Left Width',    st.session_state['left_width'],   key='_left_width');   st.session_state['left_width']   = left_width
-right_width  = right.text_input('Right Width',  st.session_state['right_width'],  key='_right_width');  st.session_state['right_width']  = right_width
+left_side    = left.text_input('Left Side',     st.session_state['left_side'],    on_change=lambda: set_as_user_inputted('left_side'), key='_left_side');    st.session_state['left_side']    = left_side
+right_side   = right.text_input('Right Side',   st.session_state['right_side'],   on_change=lambda: set_as_user_inputted('right_side'), key='_right_side');   st.session_state['right_side']   = right_side
+left_width   = left.text_input('Left Width',    st.session_state['left_width'],   on_change=lambda: set_as_user_inputted('left_width'), key='_left_width');   st.session_state['left_width']   = left_width
+right_width  = right.text_input('Right Width',  st.session_state['right_width'],  on_change=lambda: set_as_user_inputted('right_width'), key='_right_width');  st.session_state['right_width']  = right_width
 
-top_center   = st.text_input('Top Center',      st.session_state['top_center'],   key='_top_center');   st.session_state['top_center']   = top_center
-height       = st.text_input('Height',          st.session_state['height'],       key='_height');       st.session_state['height']       = height
-total_width  = st.text_input('Total Width',     st.session_state['total_width'],  key='_total_width');  st.session_state['total_width']  = total_width
+top_center   = st.text_input('Top Center',      st.session_state['top_center'],   on_change=lambda: set_as_user_inputted('top_center'), key='_top_center');   st.session_state['top_center']   = top_center
+height       = st.text_input('Height',          st.session_state['height'],       on_change=lambda: set_as_user_inputted('height'), key='_height');       st.session_state['height']       = height
+total_width  = st.text_input('Total Width',     st.session_state['total_width'],  on_change=lambda: set_as_user_inputted('total_width'), key='_total_width');  st.session_state['total_width']  = total_width
 
 
 angles = (top_left, top_right, bottom_left, bottom_right, top_center)
@@ -53,17 +70,24 @@ prev = copy(combined)
 
 def have(*stuff):
     rtn = all(stuff)
-    if rtn:
-        print(f'we have all of {stuff}')
-    else:
-        print(f'we dont have all of {stuff}')
     return rtn
 
 def calc(setTo, expr):
-    if setTo is not 'square' and (not len(st.session_state[setTo]) or eval_num_changed):
-        st.session_state[setTo] = str(simplify(N(expr)) if st.session_state.eval_num else expr)
+    global invalid
+    if setTo != 'square' or eval_num_changed:
+        expr = str(round(simplify(N(expr)), rnd) if st.session_state.eval_num else expr)
+
+        if len(st.session_state[setTo]):
+            if st.session_state[setTo] != expr and not setTo in st.session_state['user_inputted']:
+                # This says that the user-inputted values are invalid (which makes you wonder about the validity of the answers this provides)
+                # invalid = f'{st.session_state[setTo]} != {expr}'
+                pass
+        else:
+            st.session_state[setTo] = expr
 
 
+# Do all the calculations
+# Underscored variables indicate it's a string name, while the non-underscored indicate it's an Expr
 # Calculate any of the obviously missing things
 if have(bottom_left,  bottom_right): calc('top_center',   parse(bottom_left) + parse(bottom_right))
 if have(bottom_left,  top_center):   calc('bottom_right', parse(top_center)  - parse(bottom_left))
@@ -127,7 +151,6 @@ for _a, _b, _c in right_triangle_lines:
     if have(b, c): calc(_a, sqrt(b**2 + c**2))
 
 
-
 #* If we have top_center and a line adjacent to it, we can make an imaginary triangle on the outside,
 #   and then solve for that triangle's opposite (height) and adjecent (base)
 # imaginaryOutsideTriangles = (
@@ -149,6 +172,17 @@ for _a, _b, _c in right_triangle_lines:
 angles = map(st.session_state.get, ('top_left', 'top_right', 'bottom_left', 'bottom_right', 'top_center'))
 lines  = map(st.session_state.get, ('left_side', 'right_side', 'left_width', 'right_width', 'height', 'total_width'))
 combined = tuple(angles) + tuple(lines)
+
+if invalid:
+    st.warning(f'Invalid Triangle: {invalid}')
+
+st.divider()
+
+"""
+Put in the values you *do* have, and this will solve for the values you *don't* have.
+
+If you're rounding, be sure to set the digits to round to *before* entering your values, otherwise it won't work.
+"""
 
 # Keep calculating until we can't anymore
 if prev != combined:

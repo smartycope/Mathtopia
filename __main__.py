@@ -140,10 +140,13 @@ if expr is not None:
         a, *b, c, d = st.columns([.05] + ([.7/len(vars)]*len(vars)) + [.15, .2])
         a.markdown(f'## {func_name}(')
         for s, v in zip(b, vars):
-            s.text_input(str(v), f'{v}', key=f'{v}_set_to', disabled=st.session_state.disabled == v)
+            value = str(v)
+            if 'vars_dict' in st.session_state:
+                value = st.session_state['vars_dict'][v]
+            s.text_input(str(v), value, key=f'{v}_set_to', disabled=st.session_state.disabled == v)
         c.markdown('## ) =')
         # The '=' Box
-        eq = parse(d.text_input(' ', '0', label_visibility='hidden', key='eq', disabled=st.session_state.disabled == 'eq'))
+        eq = parse(d.text_input(' ', st.session_state.get('eq') or '0', label_visibility='hidden', key='eq', disabled=st.session_state.disabled == 'eq'))
 
         copy_full_expression.code(func_intro[2:] + str(eq))
 

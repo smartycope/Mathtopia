@@ -12,6 +12,11 @@ if 'num_eval' not in st.session_state:
     st.session_state['num_eval'] = False
 if 'vars' not in st.session_state:
     st.session_state['vars'] = False
+# Save the main UI state so we can come back to it
+st.session_state['_expr'] = st.session_state.get('_expr')
+st.session_state['eq'] = st.session_state.get('eq')
+st.session_state['vars'] = st.session_state.get('vars')
+
 
 
 mode = st.radio('Mode', options=['Sum', 'Product'], horizontal=True)

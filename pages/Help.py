@@ -1,10 +1,15 @@
 import streamlit as st
 
+# Save the main UI state so we can come back to it
+st.session_state['_expr'] = st.session_state.get('_expr')
+st.session_state['eq'] = st.session_state.get('eq')
+st.session_state['vars'] = st.session_state.get('vars')
+
 """
 # Welcome to Mathland!
 """
 st.caption('Yes, I know its a stupid name, but I couldnt think of anything better')
-
+print('', )
 st.markdown("""
 Enter an expression, and it will parse it, convert it to a sympy expression, and
 solve it for you, give you information on it, and let you play with it in code.

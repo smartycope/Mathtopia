@@ -5,11 +5,14 @@ from streamlit_extras.switch_page_button import switch_page
 from src.parse import parse
 from src.helper import show_sympy
 
+# Save the main UI state so we can come back to it
+st.session_state['_expr'] = st.session_state.get('_expr')
+st.session_state['eq'] = st.session_state.get('eq')
+st.session_state['vars'] = st.session_state.get('vars')
+
 st.set_page_config(layout='centered')
 
 _grid = grid([1, 4], [1, 1, 4], [1, 1, 4], vertical_align="center")
-
-st.session_state['_expr'] = st.session_state.get('_expr')
 
 _grid.image('assets/partial_derivative.png', width=100)
 _grid.empty()

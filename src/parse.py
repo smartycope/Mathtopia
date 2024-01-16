@@ -196,5 +196,5 @@ def parse(text, manual_latex=False, replace_constants=True) -> Expr:
         # See if we need to remove one side of the equation
         # if st.session_state.remove_fx and isinstance(expr, Eq):
             # expr = expr.rhs
-        print(f'Parsed `{text}` as `{expr}`')
+        # print(f'Parsed `{text}` as `{expr}`')
         return expr

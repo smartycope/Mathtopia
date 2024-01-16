@@ -7,9 +7,10 @@ import re
 from src.parse import parse
 from src.helper import show_sympy
 
-# This is only here so it preserves the current expression, if we go to this page
-# then go back without changing anythign
+# Save the main UI state so we can come back to it
 st.session_state['_expr'] = st.session_state.get('_expr')
+st.session_state['eq'] = st.session_state.get('eq')
+st.session_state['vars'] = st.session_state.get('vars')
 
 if 'states' not in st.session_state:
     st.session_state['states'] = []
