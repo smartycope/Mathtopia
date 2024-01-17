@@ -28,12 +28,14 @@ def _solve(expr, eq):
         # Make a Symbol that looks like a function call, for when we display it in the solutions box
         fake_func_call = f'{ss.func_name}({",".join(map(str, ss.vars_dict.values()))})'
         sol = [{Symbol(fake_func_call): expr}]
-        if ss.disable_eq is False:
+
+        ss.check_changed()
+        if ss.disable_eq is False or ss.vars_dict_changed:#ss.eq != str(expr):
             ss.disable_eq = str(expr)
             # We have to rerun once here (and in the else statement below) so the UI will immediately
             # reflect the change we've made here
             # In addition, we only want to rerun if we've made a change, otherwise we get stuck in an
-            # Infinite loop
+            # infinite loop
             st.rerun()
     else:
         # is not False here, it gets set to a string when true

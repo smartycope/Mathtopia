@@ -102,7 +102,7 @@ ss._expr = _ex
 if 'set_expr' in ss:
     del ss.set_expr
 box_type = right.text_area if use_area_box else right.text_input
-expr = parse(box_type(' ', label_visibility='hidden', value=_ex, key='_expr', on_change=reset_ui), interpret_as_latex)
+expr = parse(box_type(' ', label_visibility='hidden', key='_expr', on_change=reset_ui), interpret_as_latex)
 
 # This shouldn't be necissary. I have no idea why it is. And it's STILL inconsistent
 # This is for toasting units of constants we've replaced
@@ -156,10 +156,8 @@ if expr is not None:
             s.text_input(str(v), value, key=f'{v}_set_to', args=(v,))
         c.markdown('## ) =')
         # The '=' Box
-        # Why? Why is this necissary?
-        ss.eq = ss.disable_eq if ss.disable_eq else (ss.eq or '0')
-        print(ss.eq)
-        eq = parse(d.text_input(' ', ss.eq, key='eq', disabled=bool(ss.disable_eq), label_visibility='hidden'))
+        ss.eq = ss.disable_eq or ss.eq or '0'
+        eq = parse(d.text_input(' ', key='eq', disabled=bool(ss.disable_eq), label_visibility='hidden'))
 
         copy_full_expression.code(func_intro[2:] + str(eq))
 
