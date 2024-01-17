@@ -8,6 +8,7 @@ from sympy.matrices.common import ShapeError
 from sympy.plotting import plot, plot3d
 from src.SS import ss
 
+# Anything here will get preserved between pages, and is ensured to exist properly
 ss.setup(
     # Used for the code box
     prev_id=-1,
@@ -16,9 +17,21 @@ ss.setup(
     solution=None,
     vars_dict={},
     _expr='',
+    eq=0,
+    func_name='f',
+    interpret_as_latex=False,
+    impl_mul=True,
+    do_solve=True,
+    do_simplify=True,
+    do_it=True,
     num_eval=False,
     do_round=3,
-    eq=0,
+    filter_imag=True,
+    do_plot=False,
+    do_code=False,
+    do_check_point=False,
+    do_ui_reset=True,
+    use_area_box=False,
 )
 ss.update(__file__)
 print(ss.page_changed)
@@ -90,7 +103,7 @@ with st.sidebar:
 
     with st.expander('Advanced Options'):
         do_ui_reset = st.checkbox('Reset UI when a new expression is given', key='do_ui_reset', value=True, help='Reset the variables provided and the equals expression provided whenever the function is changed')
-        use_area_box = st.checkbox('Use Text Area Instead of Single Line',   key='use_area_box', help='Instead of using a single line to specify the function, use a larger text box')
+        use_area_box = st.checkbox('Use Text Area Instead of Single Line',   key='use_area_box', help='Instead of using a single line to specify the function, use a larger text box. Will wrap lines instead of scrolling them.')
 
 func_name_top_line = st.empty()
 func_name_same_line, right = st.columns([.2, .95])

@@ -6,6 +6,7 @@ from time import time as now
 
 # TODO add more documentation
 # TODO add auto-page config options
+# TODO add query params
 class SS:
     """ A better streamlit.session_state interface.
         There should only be 1 instance of this class, preferably in the main streamlit file. The
