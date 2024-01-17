@@ -1,16 +1,13 @@
 import streamlit as st
 from streamlit_extras.switch_page_button import switch_page
-# from src.helper import show_sympy
-# from src.parse import parse
+from src.SS import ss
 
-# Save the main UI state so we can come back to it
-st.session_state['_expr'] = st.session_state.get('_expr')
-st.session_state['eq'] = st.session_state.get('eq')
-st.session_state['vars_dict'] = st.session_state.get('vars_dict')
+st.set_page_config(layout='centered')
+ss.maintain_state()
 
 def eq(expr):
     if st.button(expr):
-        st.session_state['set_expr'] = expr
+        ss['set_expr'] = expr
         switch_page('main ')
     # For some reason this causes in infinite loop of some sort??
     # show_sympy(parse(expr))

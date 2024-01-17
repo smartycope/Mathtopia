@@ -4,6 +4,7 @@ from src.funcs import *
 import io
 from src.helper import show_sympy
 
+ss = st.session_state.ss
 
 def formatInput2code(s):
     # keywords = set(dir(builtins) + dir(er) + re.findall((lineStart + group(word) + ifFollowedBy(ow + '=')).str(), s))
@@ -24,13 +25,13 @@ def formatInput2code(s):
 def run_code(code, rtn_tab, output_tab, errors_tab):
         std = io.StringIO()
         err = io.StringIO()
-        expr = st.session_state.expr
-        solution = st.session_state.solution
-        equals = st.session_state.eq
-        vars = st.session_state.vars_dict
+        expr = ss.expr
+        solution = ss.solution
+        equals = ss.eq
+        vars = ss.vars_dict
 
         _locals = locals()
-        _locals[st.session_state.func_name] = lambda *args: expr.subs(vars)
+        _locals[ss.func_name] = lambda *args: expr.subs(vars)
         with RedirectStd(stdout=std, stderr=err):
             try:
                 exec(formatInput2code(code), globals(), _locals)

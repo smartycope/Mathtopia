@@ -15,6 +15,9 @@ from sympy.parsing import parse_expr
 import ezregex as er
 from pages.Constants import constants
 
+# ss = st.session_state.ss
+from src.SS import ss
+
 arrowRegex    = (er.group(er.chunk) + er.ow + '->' + er.ow + er.group(er.chunk)).compile()
 doubleEqRegex = (er.group(er.chunk) + er.ow + '==' + er.ow + er.group(er.chunk)).compile()
 eqRegex       = (er.group(er.chunk) + er.ow + er.anyCharExcept('<>!=') + '=' + er.anyCharExcept('<>!=') + er.ow + er.group(er.chunk)).compile()
@@ -60,10 +63,10 @@ def _sanatizeInput(eq:str, replace_constants=True):
             if found is not None:
                 eq = re.sub(default, replacement['value'], eq)
                 # Make sure they know the correct units
-                if st.session_state.get('to_toast') is not None:
-                    st.session_state['to_toast'] = st.session_state['to_toast'].append(f"{default} is in units of {replacement['unit']}")
+                if ss.get('to_toast') is not None:
+                    ss['to_toast'] = ss['to_toast'].append(f"{default} is in units of {replacement['unit']}")
                 else:
-                    st.session_state['to_toast'] = [f"{default} is in units of {replacement['unit']}"]
+                    ss['to_toast'] = [f"{default} is in units of {replacement['unit']}"]
                 # For good measure, try to toast, even though it doesn't work here
                 # (for some scudding reason)
                 st.toast(f"{default} is in units of {replacement['unit']}")
@@ -77,8 +80,8 @@ def _sanatizeInput(eq:str, replace_constants=True):
     m = re.search(doubleEqRegex, eq) or re.search(eqRegex, eq)
     if m is not None:
         eq = m.group(1)
-        st.session_state['set_expr'] = m.group(1)
-        st.session_state['eq'] = m.group(2)
+        ss['set_expr'] = m.group(1)
+        ss['eq'] = m.group(2)
         # Because this is being called parse(), which is being called just after
         # we get the text from the user, rerun so it loads the updated text given here
         st.rerun()
@@ -125,10 +128,10 @@ def get_atoms(expr):
 
 def parse(text, manual_latex=False, replace_constants=True) -> Expr:
     # Not technically necissary, unless they bookmark a page that uses parse
-    if 'impl_mul' not in st.session_state:
-        st.session_state['impl_mul'] = True
-    # if 'remove_fx' not in st.session_state:
-        # st.session_state['remove_fx'] = False
+    if 'impl_mul' not in ss:
+        ss['impl_mul'] = True
+    # if 'remove_fx' not in ss:
+        # ss['remove_fx'] = False
 
     # print('attempting to parse ', text, ' ', sep='`')
     #* If there's nothing there, it's okay
@@ -150,9 +153,9 @@ def parse(text, manual_latex=False, replace_constants=True) -> Expr:
     e = E
 
     # Actually parse the expression (but don't solve it yet!)
-    # expr = parse_expr(sanatized, transformations=st.session_state.transformation, evaluate=False)
+    # expr = parse_expr(sanatized, transformations=ss.transformation, evaluate=False)
     trans = (convert_xor, lambda_notation) + standard_transformations
-    if st.session_state.impl_mul:
+    if ss.impl_mul:
         trans += (implicit_multiplication,)
     try:
         expr = parse_expr(sanatized, evaluate=False, transformations=trans, local_dict=locals())
@@ -162,7 +165,7 @@ def parse(text, manual_latex=False, replace_constants=True) -> Expr:
     # Don't do this anymore. We now handle equal signs by putting them in the = box
     else:
         # See if we need to remove one side of the equation
-        # if st.session_state.remove_fx and isinstance(expr, Eq):
+        # if ss.remove_fx and isinstance(expr, Eq):
             # expr = expr.rhs
         # print(f'Parsed `{text}` as `{expr}`')
         return expr

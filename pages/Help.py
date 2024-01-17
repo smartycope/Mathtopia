@@ -1,9 +1,8 @@
 import streamlit as st
+from src.SS import ss
 
-# Save the main UI state so we can come back to it
-st.session_state['_expr'] = st.session_state.get('_expr')
-st.session_state['eq'] = st.session_state.get('eq')
-st.session_state['vars_dict'] = st.session_state.get('vars_dict')
+st.set_page_config(layout='wide')
+ss.maintain_state()
 
 """
 # Welcome to Mathland!

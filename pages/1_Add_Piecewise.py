@@ -6,16 +6,14 @@ from ezregex import *
 import re
 from src.parse import parse
 from src.helper import show_sympy
-
-# Save the main UI state so we can come back to it
-st.session_state['_expr'] = st.session_state.get('_expr')
-st.session_state['eq'] = st.session_state.get('eq')
-st.session_state['vars_dict'] = st.session_state.get('vars_dict')
-
-if 'states' not in st.session_state:
-    st.session_state['states'] = []
+from src.SS import ss
 
 st.set_page_config(layout='wide')
+ss.maintain_state()
+
+if 'states' not in ss:
+    ss['states'] = []
+
 
 op = ow + anyof('<=', '>=', '<', '>', '!=') + ow
 interval = group(chunk, name='a') + group(op, name='op1') + group(chunk, name='b') + group(op, name='op2') + group(chunk, name='c')
@@ -33,7 +31,7 @@ l.markdown('Expression')
 r.markdown('Condition')
 
 states = []
-for i in range(len(st.session_state.states) + 1):
+for i in range(len(ss.states) + 1):
     l, m, r = right.columns((.45, .1, .45))
     expr = l.text_input(' ', label_visibility='hidden', key=f'{i}_expr')
     m.markdown('# for')
@@ -41,11 +39,11 @@ for i in range(len(st.session_state.states) + 1):
     if len(expr) and len(condition):
         states.append((expr, condition))
 
-if len(st.session_state.states) != len(states):
-    st.session_state.states = states
+if len(ss.states) != len(states):
+    ss.states = states
     st.rerun()
 
-st.session_state.states = states
+ss.states = states
 
 if len(states):
     left, right = st.columns([.8, .2])
@@ -60,5 +58,5 @@ if len(states):
     show_sympy(parse(result))
 
     if right.button('Overwrite Main Expression'):
-        st.session_state['set_expr'] = result
+        ss['set_expr'] = result
         switch_page('main ')

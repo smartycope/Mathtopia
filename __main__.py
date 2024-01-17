@@ -1,60 +1,44 @@
 import streamlit as st
 import matplotlib.pyplot as plt
-from sympy.plotting.plot import plot_parametric
-from sympy import *
-from sympy.abc import x,y,z
 from sympy import *
 from Cope import ensure_not_iterable
 from Cope.sympy import *
-from src.helper import *
-from src.helper import _solve
 from code_editor import code_editor
 from sympy.matrices.common import ShapeError
 from sympy.plotting import plot, plot3d
-from src.SS import SS
+from src.SS import ss
+
+ss.setup(
+    # Used for the code box
+    prev_id=-1,
+    code={'text': '', 'id': -1},
+    # An iterable of solutions
+    solution=None,
+    vars_dict={},
+    _expr='',
+    num_eval=False,
+    do_round=3,
+    eq=0,
+)
 
 # This handles a very odd error that only comes up every other run
 try:
     from src.parse import parse, get_atoms
     from src.code import run_code
+    from src.helper import *
+    from src.helper import _solve
 except KeyError:
     print('Weird error, rerunning')
     st.rerun()
 
 st.set_page_config(layout='wide')
 
-ss = SS({
-    # 'prev_id': -1,
-    # 'solution': None,
-    # 'vars_dict': {},
-})
+print(ss.eq)
 
-# Used for the code box
-if 'prev_id' not in st.session_state:
-    st.session_state['prev_id'] = -1
-# # An iterable of solutions
-if 'solution' not in st.session_state:
-    st.session_state['solution'] = None
-# If we DO have it, and it's none, make it '', as well as if we don't have it
 # The raw expression given
-if st.session_state.get('_expr') is None:
-    st.session_state['_expr'] = ''
-# A list of all the variables we have (not their values)
-# if 'vars' not in st.session_state:
-#     st.session_state['vars'] = []
-# Disable eq if we've provided all the parameters
-if 'disable_eq' not in st.session_state:
-    st.session_state['disable_eq'] = False
-# if 'vars_dict' not in st.session_state:
-    # st.session_state['vars_dict'] = {}
-if 'prev_vars_dict' not in st.session_state:
-    st.session_state['prev_vars_dict'] = {}
-
-vars_dict_changed = st.session_state['prev_vars_dict'] != st.session_state['vars_dict']
-
-print(vars_dict_changed)
-
-print(st.session_state['vars_dict'])
+# If we DO have it, and it's none, make it '', as well as if we don't have it
+# if ss._expr is None:
+#     ss['_expr'] = ''
 
 # Sidebar configs
 with st.sidebar:
@@ -65,21 +49,21 @@ with st.sidebar:
     impl_mul = st.checkbox('Implicit Multiplication',            key='impl_mul',    value=True,  help='Allows you to do things like `3x` and `3(x+1) without throwing errors')
     do_solve = st.checkbox('Solve',                              key='do_solve',    value=True,  help='Whether to solve the equation or not. Helpful if you want to look at things that take a long time to solve, like some integrals.')
     if do_solve:
-        do_simplify = st.checkbox('Simplify Solutions',             key='do_simplify', value=True,  help='This reduces the equation down to its most simple form')
-        do_it = st.checkbox('Evaluate Solutions',                   key='do_it',       value=do_simplify, help='This is distinct from simplifying the expression. Simplifying will reduce down to, say, an integral, as opposed to actually evaluating (symbolically) the integral.')
-        num_eval = st.checkbox('Give Non-Symbolic Solutions',       key='num_eval',    value=False, help='Evaluate the function numerically instead of symbolically')
+        do_simplify = st.checkbox('Simplify Solutions',          key='do_simplify', value=True,  help='This reduces the equation down to its most simple form')
+        do_it = st.checkbox('Evaluate Solutions',                key='do_it',       value=do_simplify, help='This is distinct from simplifying the expression. Simplifying will reduce down to, say, an integral, as opposed to actually evaluating (symbolically) the integral.')
+        num_eval = st.checkbox('Give Non-Symbolic Solutions',    key='num_eval',    value=False, help='Evaluate the function numerically instead of symbolically')
         _do_round = st.empty()
         filter_imag = st.checkbox('Only Inlcude Real Solutions', key='filter_imag', value=True,  help='Whether we should include answers with `i` in them or not')
-    do_plot = st.checkbox('Plot the function', key='do_plot', help='Only 1 and 2 unknowns can be plotted')
+    do_plot = st.checkbox('Plot the function',                   key='do_plot',     value=False, help='Only 1 and 2 unknowns can be plotted')
     do_code = st.checkbox('Include Custom Code Box',             key='do_code',     value=False, help='Adds a code area where we can run Python & sympy code directly on the expression')
     do_check_point = st.empty()
     if st.button('Reset Variables', key='reset_vars', help='Reset all variables back to their Symbols'):
-        for v in st.session_state.vars_dict.keys():
-            st.session_state[f'{v}_set_to'] = f'Symbol("{v}")'
+        for v in ss.vars_dict.keys():
+            ss[f'{v}_set_to'] = f'Symbol("{v}")'
     if do_solve and num_eval:
         do_round = _do_round.number_input('Round to:', format='%d', value=3, key='do_round')
     else:
-        st.session_state['do_round'] = 3
+        ss.do_round = 3
 
     with st.expander('Copy', False):
         left, right = st.columns(2)
@@ -106,25 +90,24 @@ with st.sidebar:
 
     with st.expander('Advanced Options'):
         do_ui_reset = st.checkbox('Reset UI when a new expression is given', key='do_ui_reset', value=True, help='Reset the variables provided and the equals expression provided whenever the function is changed')
-        use_area_box = st.checkbox('Use Text Area Instead of Single Line', key='use_area_box', help='Instead of using a single line to specify the function, use a larger text box')
+        use_area_box = st.checkbox('Use Text Area Instead of Single Line',   key='use_area_box', help='Instead of using a single line to specify the function, use a larger text box')
 
 func_name_top_line = st.empty()
 func_name_same_line, right = st.columns([.2, .95])
 func_name_same_line.empty()
 
-_ex = st.session_state.get('set_expr') or st.session_state.get('_expr') or ''
+_ex = ss.set_expr or ss._expr or ''
 # This is necissary so pages fill the main box properly for some reason
-st.session_state['_expr'] = _ex
-if 'set_expr' in st.session_state:
-    del st.session_state['set_expr']
+ss._expr = _ex
+if 'set_expr' in ss:
+    del ss.set_expr
 box_type = right.text_area if use_area_box else right.text_input
 expr = parse(box_type(' ', label_visibility='hidden', value=_ex, key='_expr', on_change=reset_ui), interpret_as_latex)
 
 # This shouldn't be necissary. I have no idea why it is. And it's STILL inconsistent
 # This is for toasting units of constants we've replaced
-if (bread := st.session_state.get('to_toast')) is not None and len(bread):
+if (bread := ss.to_toast) is not None and len(bread):
     for _ in range(len(bread)):
-        print('toasting from main')
         st.toast(bread.pop())
 
 
@@ -156,21 +139,27 @@ if expr is not None:
         'Solve for:'
         a, *b, c, d = st.columns([.05] + ([.7/len(vars)]*len(vars)) + [.15, .2])
         a.markdown(f'## {func_name}(')
+        ss.check_changed()
         for s, v in zip(b, vars):
             value = str(v)
-            if 'vars_dict' in st.session_state and v in st.session_state['vars_dict'] and vars_dict_changed:
-                value = str(st.session_state['vars_dict'][v])
+            if ('vars_dict' in ss and
+                v in ss.vars_dict and
+                (
+                    ss.vars_dict_changed or
+                    ss.page_changed or
+                    ss.vars_dict[v] in (None, 'None', '')
+                )):
+                value = str(ss.vars_dict[v])
                 # If it's emtpy, refill it to the default var name
                 if value == 'None' or not len(value):
                     value = str(v)
-            # Delete whatever we had before just before we reset, so we don't set ourselves to the previous var
-            def delete_var(var):
-                return
-                del st.session_state['vars_dict'][var]
-            s.text_input(str(v), value, key=f'{v}_set_to', on_change=delete_var, args=(v,))
+            s.text_input(str(v), value, key=f'{v}_set_to', args=(v,))
         c.markdown('## ) =')
         # The '=' Box
-        eq = parse(d.text_input(' ', st.session_state['disable_eq'] if st.session_state['disable_eq'] else (st.session_state.get('eq') or '0'), key='eq', disabled=bool(st.session_state['disable_eq']), label_visibility='hidden'))
+        # Why? Why is this necissary?
+        ss.eq = ss.disable_eq if ss.disable_eq else (ss.eq or '0')
+        print(ss.eq)
+        eq = parse(d.text_input(' ', ss.eq, key='eq', disabled=bool(ss.disable_eq), label_visibility='hidden'))
 
         copy_full_expression.code(func_intro[2:] + str(eq))
 
@@ -193,7 +182,7 @@ if expr is not None:
                 col.text_input(f'col {i}', key=f'{i}_row')
             m = 'Matrix(['
             for i in range(expr.cols-1):
-                m += '[' + st.session_state[f'{i}_row'] + '], '
+                m += '[' + ss[f'{i}_row'] + '], '
             m += '])'
             space, matches = split_matrix(expr)
             try:
@@ -201,14 +190,12 @@ if expr is not None:
             except ShapeError as err:
                 st.error(err)
 
-    vars_dict = {v: parse(st.session_state[f'{v}_set_to']) for v in vars}
+    vars_dict = {v: v if (new := ss[f'{v}_set_to']) in (None, 'None', '') else parse(new) for v in vars}
     expr = expr.subs(vars_dict)
 
     # Save the parsed sympy expression, just in case we need it elsewhere
-    st.session_state['expr'] = expr
-    # st.session_state['vars'] = vars
-    st.session_state['vars_dict'] = vars_dict
-    st.session_state['prev_vars_dict'] = st.session_state['vars_dict']
+    ss.expr = expr
+    ss.vars_dict = vars_dict
 
     copy_expression.code(str(expr))
     copy_expression_latex.code(latex(expr))
@@ -218,7 +205,7 @@ if expr is not None:
     if do_solve and len(vars):
         with st.expander('Solutions', True):
             solution = _solve(expr, eq or S(0))
-            st.session_state['solution'] = solution
+            ss.solution = solution
             for i in solution:
                 show_sympy(i)
                 # Don't add the extra divider at the bottom
@@ -249,15 +236,15 @@ if expr is not None:
         with left:
             code_tab, output_tab, errors_tab, help_tab = st.tabs(('Code', 'Output', 'Errors', 'Help'))
             with code_tab:
-                resp = code_editor('' if (cur := st.session_state.get('code')) is None else cur['text'], lang='python', key='code')
+                resp = code_editor(ss.code['text'], lang='python', key='code')
                 code = resp['text']
                 id = resp['id']
-                if id != st.session_state.prev_id:
+                if id != ss.prev_id:
                     rtn = right.container(border=True)
                     run_code(code, rtn, output_tab, errors_tab)
 
             help_tab.markdown('''
-                ### In the code box, you can run sympy expressions directly on the current expression
+                ##### In the code box, you can run sympy expressions directly on the current expression
                 The code box accepts valid Python, and has the following variables in scope:
                 - `expr`:Expr
                     - The current expression
@@ -281,3 +268,5 @@ if expr is not None:
 
 else:
     func_name_same_line.markdown('# f()=')
+
+ss.reset_changed()

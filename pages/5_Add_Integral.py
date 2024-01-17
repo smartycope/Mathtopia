@@ -4,13 +4,10 @@ from streamlit_extras.grid import grid
 from streamlit_extras.switch_page_button import switch_page
 from src.parse import parse
 from src.helper import show_sympy
+from src.SS import ss
 
 st.set_page_config(layout='centered')
-
-# Save the main UI state so we can come back to it
-st.session_state['_expr'] = st.session_state.get('_expr')
-st.session_state['eq'] = st.session_state.get('eq')
-st.session_state['vars_dict'] = st.session_state.get('vars_dict')
+ss.maintain_state()
 
 _grid = grid([1, 1, 2], [4, 1, 1], [1, 1, 2], vertical_align="bottom")
 
@@ -18,8 +15,8 @@ _grid.empty()
 to = _grid.text_input('To:')
 _grid.empty()
 _grid.image('assets/integral.png', width=200)
-func = _grid.text_input('Func:', st.session_state.get('_expr'))
-var = _grid.text_input('Var:', list(st.session_state.vars_dict.keys())[0] if len(st.session_state.vars_dict.keys()) == 1 else '')
+func = _grid.text_input('Func:', ss.get('_expr'))
+var = _grid.text_input('Var:', list(ss.vars_dict.keys())[0] if len(ss.vars_dict.keys()) == 1 else '')
 _grid.empty()
 from_ = _grid.text_input('From:')
 
@@ -41,5 +38,5 @@ elif (func is not None and len(func) and var is not None and len(var)):
     show_sympy(parse(result))
 
     if right.button('Overwrite Main Expression'):
-        st.session_state['set_expr'] = result
+        ss['set_expr'] = result
         switch_page('main ')

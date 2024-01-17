@@ -4,24 +4,22 @@ import streamlit as st
 from src.parse import parse
 from copy import copy
 from sympy import N
-
-# Save the main UI state so we can come back to it
-st.session_state['_expr'] = st.session_state.get('_expr')
-st.session_state['eq'] = st.session_state.get('eq')
-st.session_state['vars_dict'] = st.session_state.get('vars_dict')
+from src.SS import ss
 
 st.set_page_config(layout='wide')
-st.session_state['square'] = '90'
+ss.maintain_state()
+
+ss['square'] = '90'
 invalid = False
 
-if 'user_inputted' not in st.session_state:
-    st.session_state['user_inputted'] = []
+if 'user_inputted' not in ss:
+    ss['user_inputted'] = []
 
 left, mid, right = st.columns(3)
 # This is DIFFERENT from num_eval, by intent. Don't get them confused.
 eval_num = left.checkbox('Evaluate Non-Symbolically', key='eval_num')
-eval_num_changed = st.session_state.get('prev_eval_num') != eval_num
-st.session_state['prev_eval_num'] = eval_num
+eval_num_changed = ss.get('prev_eval_num') != eval_num
+ss['prev_eval_num'] = eval_num
 
 if eval_num:
     rnd = right.number_input('Round to:', value=3)
@@ -32,34 +30,34 @@ left, mid, right = st.columns([.3, .4, .3])
 mid.image('assets/triangle.png')
 
 
-if 'top_left'     not in st.session_state or reset:     st.session_state['top_left'] = ''
-if 'top_right'    not in st.session_state or reset:    st.session_state['top_right'] = ''
-if 'bottom_left'  not in st.session_state or reset:  st.session_state['bottom_left'] = ''
-if 'bottom_right' not in st.session_state or reset: st.session_state['bottom_right'] = ''
-if 'left_side'    not in st.session_state or reset:    st.session_state['left_side'] = ''
-if 'right_side'   not in st.session_state or reset:   st.session_state['right_side'] = ''
-if 'left_width'   not in st.session_state or reset:   st.session_state['left_width'] = ''
-if 'right_width'  not in st.session_state or reset:  st.session_state['right_width'] = ''
-if 'top_center'   not in st.session_state or reset:   st.session_state['top_center'] = ''
-if 'height'       not in st.session_state or reset:       st.session_state['height'] = ''
-if 'total_width'  not in st.session_state or reset:  st.session_state['total_width'] = ''
+if 'top_left'     not in ss or reset:     ss['top_left'] = ''
+if 'top_right'    not in ss or reset:    ss['top_right'] = ''
+if 'bottom_left'  not in ss or reset:  ss['bottom_left'] = ''
+if 'bottom_right' not in ss or reset: ss['bottom_right'] = ''
+if 'left_side'    not in ss or reset:    ss['left_side'] = ''
+if 'right_side'   not in ss or reset:   ss['right_side'] = ''
+if 'left_width'   not in ss or reset:   ss['left_width'] = ''
+if 'right_width'  not in ss or reset:  ss['right_width'] = ''
+if 'top_center'   not in ss or reset:   ss['top_center'] = ''
+if 'height'       not in ss or reset:       ss['height'] = ''
+if 'total_width'  not in ss or reset:  ss['total_width'] = ''
 
 def set_as_user_inputted(name):
-    st.session_state['user_inputted'].append(name)
+    ss['user_inputted'].append(name)
 
-top_left     = left.text_input('Top Left',      st.session_state['top_left'],     on_change=lambda: set_as_user_inputted('top_left'), key='_top_left');     st.session_state['top_left']     = top_left
-top_right    = right.text_input('Top Right',    st.session_state['top_right'],    on_change=lambda: set_as_user_inputted('top_right'), key='_top_right');    st.session_state['top_right']    = top_right
-bottom_left  = left.text_input('Bottom Left',   st.session_state['bottom_left'],  on_change=lambda: set_as_user_inputted('bottom_left'), key='_bottom_left');  st.session_state['bottom_left']  = bottom_left
-bottom_right = right.text_input('Bottom Right', st.session_state['bottom_right'], on_change=lambda: set_as_user_inputted('bottom_right'), key='_bottom_right'); st.session_state['bottom_right'] = bottom_right
+top_left     = left.text_input('Top Left',      ss['top_left'],     on_change=lambda: set_as_user_inputted('top_left'), key='_top_left');     ss['top_left']     = top_left
+top_right    = right.text_input('Top Right',    ss['top_right'],    on_change=lambda: set_as_user_inputted('top_right'), key='_top_right');    ss['top_right']    = top_right
+bottom_left  = left.text_input('Bottom Left',   ss['bottom_left'],  on_change=lambda: set_as_user_inputted('bottom_left'), key='_bottom_left');  ss['bottom_left']  = bottom_left
+bottom_right = right.text_input('Bottom Right', ss['bottom_right'], on_change=lambda: set_as_user_inputted('bottom_right'), key='_bottom_right'); ss['bottom_right'] = bottom_right
 
-left_side    = left.text_input('Left Side',     st.session_state['left_side'],    on_change=lambda: set_as_user_inputted('left_side'), key='_left_side');    st.session_state['left_side']    = left_side
-right_side   = right.text_input('Right Side',   st.session_state['right_side'],   on_change=lambda: set_as_user_inputted('right_side'), key='_right_side');   st.session_state['right_side']   = right_side
-left_width   = left.text_input('Left Width',    st.session_state['left_width'],   on_change=lambda: set_as_user_inputted('left_width'), key='_left_width');   st.session_state['left_width']   = left_width
-right_width  = right.text_input('Right Width',  st.session_state['right_width'],  on_change=lambda: set_as_user_inputted('right_width'), key='_right_width');  st.session_state['right_width']  = right_width
+left_side    = left.text_input('Left Side',     ss['left_side'],    on_change=lambda: set_as_user_inputted('left_side'), key='_left_side');    ss['left_side']    = left_side
+right_side   = right.text_input('Right Side',   ss['right_side'],   on_change=lambda: set_as_user_inputted('right_side'), key='_right_side');   ss['right_side']   = right_side
+left_width   = left.text_input('Left Width',    ss['left_width'],   on_change=lambda: set_as_user_inputted('left_width'), key='_left_width');   ss['left_width']   = left_width
+right_width  = right.text_input('Right Width',  ss['right_width'],  on_change=lambda: set_as_user_inputted('right_width'), key='_right_width');  ss['right_width']  = right_width
 
-top_center   = st.text_input('Top Center',      st.session_state['top_center'],   on_change=lambda: set_as_user_inputted('top_center'), key='_top_center');   st.session_state['top_center']   = top_center
-height       = st.text_input('Height',          st.session_state['height'],       on_change=lambda: set_as_user_inputted('height'), key='_height');       st.session_state['height']       = height
-total_width  = st.text_input('Total Width',     st.session_state['total_width'],  on_change=lambda: set_as_user_inputted('total_width'), key='_total_width');  st.session_state['total_width']  = total_width
+top_center   = st.text_input('Top Center',      ss['top_center'],   on_change=lambda: set_as_user_inputted('top_center'), key='_top_center');   ss['top_center']   = top_center
+height       = st.text_input('Height',          ss['height'],       on_change=lambda: set_as_user_inputted('height'), key='_height');       ss['height']       = height
+total_width  = st.text_input('Total Width',     ss['total_width'],  on_change=lambda: set_as_user_inputted('total_width'), key='_total_width');  ss['total_width']  = total_width
 
 
 angles = (top_left, top_right, bottom_left, bottom_right, top_center)
@@ -75,15 +73,15 @@ def have(*stuff):
 def calc(setTo, expr):
     global invalid
     if setTo != 'square' or eval_num_changed:
-        expr = str(round(simplify(N(expr)), rnd) if st.session_state.eval_num else expr)
+        expr = str(round(simplify(N(expr)), rnd) if ss.eval_num else expr)
 
-        if len(st.session_state[setTo]):
-            if st.session_state[setTo] != expr and not setTo in st.session_state['user_inputted']:
+        if len(ss[setTo]):
+            if ss[setTo] != expr and not setTo in ss['user_inputted']:
                 # This says that the user-inputted values are invalid (which makes you wonder about the validity of the answers this provides)
-                # invalid = f'{st.session_state[setTo]} != {expr}'
+                # invalid = f'{ss[setTo]} != {expr}'
                 pass
         else:
-            st.session_state[setTo] = expr
+            ss[setTo] = expr
 
 
 # Do all the calculations
@@ -105,7 +103,7 @@ triangle_angles = (
     ('bottom_left', 'top_left', 'square'),
 )
 for _a, _b, _c in triangle_angles:
-    a, b, c = map(lambda k: parse(st.session_state.get(k)), (_a, _b, _c))
+    a, b, c = map(lambda k: parse(ss.get(k)), (_a, _b, _c))
     if have(a, b): calc(_c, pi - a - b)
     if have(a, c): calc(_b, pi - a - c)
     if have(b, c): calc(_a, pi - b - c)
@@ -119,7 +117,7 @@ angleRelations = (
     ('top_left',     'left_width',  'height',      'left_side'),
 )
 for _ang, _opp, _adj, _hyp in angleRelations:
-    ang, opp, adj, hyp = map(lambda k: parse(st.session_state.get(k)), (_ang, _opp, _adj, _hyp))
+    ang, opp, adj, hyp = map(lambda k: parse(ss.get(k)), (_ang, _opp, _adj, _hyp))
 
     # Soh Cah Toa
     if have(opp, hyp): calc(_ang, asin(opp) / (hyp))
@@ -145,7 +143,7 @@ right_triangle_lines = (
     ('left_side',  'left_width',  'height'),
 )
 for _a, _b, _c in right_triangle_lines:
-    a, b, c = map(lambda k: parse(st.session_state.get(k)), (_a, _b, _c))
+    a, b, c = map(lambda k: parse(ss.get(k)), (_a, _b, _c))
     if have(a, b): calc(_c, sqrt(a**2 + b**2))
     if have(a, c): calc(_b, sqrt(a**2 + c**2))
     if have(b, c): calc(_a, sqrt(b**2 + c**2))
@@ -169,8 +167,8 @@ for _a, _b, _c in right_triangle_lines:
 #             calc(height, hyp * sin(theta))
 
 
-angles = map(st.session_state.get, ('top_left', 'top_right', 'bottom_left', 'bottom_right', 'top_center'))
-lines  = map(st.session_state.get, ('left_side', 'right_side', 'left_width', 'right_width', 'height', 'total_width'))
+angles = map(ss.get, ('top_left', 'top_right', 'bottom_left', 'bottom_right', 'top_center'))
+lines  = map(ss.get, ('left_side', 'right_side', 'left_width', 'right_width', 'height', 'total_width'))
 combined = tuple(angles) + tuple(lines)
 
 if invalid:

@@ -6,10 +6,12 @@ import decimal
 from decimal import Decimal as D
 from src.parse import get_atoms
 
-if 'num_eval' not in st.session_state:
-    st.session_state['num_eval'] = False
-if 'vars_dict' not in st.session_state:
-    st.session_state['vars_dict'] = {}
+ss = st.session_state.ss
+
+# if 'num_eval' not in ss:
+#     ss['num_eval'] = False
+# if 'vars_dict' not in ss:
+#     ss['vars_dict'] = {}
 
 def _solve(expr, eq):
     # If it's a Matrix, don't solve it, main will handle it
@@ -19,15 +21,15 @@ def _solve(expr, eq):
     # Solve for *all* the variables, not just a random one
     sol = []
     for var in (get_atoms(expr) + get_atoms(eq)):
-        sol += solve(Eq(expr, eq), var, dict=True, simplify=st.session_state.do_simplify)
+        sol += solve(Eq(expr, eq), var, dict=True, simplify=ss.do_simplify)
 
     # If we've passed parameters, there's nothing to solve, just return expr verbatim
     if not len(sol):
         # Make a Symbol that looks like a function call, for when we display it in the solutions box
-        fake_func_call = f'{st.session_state.func_name}({",".join(map(str, st.session_state.vars_dict.values()))})'
+        fake_func_call = f'{ss.func_name}({",".join(map(str, ss.vars_dict.values()))})'
         sol = [{Symbol(fake_func_call): expr}]
-        if st.session_state.get('disable_eq') is False:
-            st.session_state['disable_eq'] = str(expr)
+        if ss.disable_eq is False:
+            ss.disable_eq = str(expr)
             # We have to rerun once here (and in the else statement below) so the UI will immediately
             # reflect the change we've made here
             # In addition, we only want to rerun if we've made a change, otherwise we get stuck in an
@@ -35,12 +37,11 @@ def _solve(expr, eq):
             st.rerun()
     else:
         # is not False here, it gets set to a string when true
-        if st.session_state.get('disable_eq') is not False:
-            st.session_state['disable_eq'] = False
+        if ss.disable_eq is not False:
+            ss.disable_eq = False
             st.rerun()
 
-
-    if st.session_state.do_it:
+    if ss.do_it:
         simplified = [i.doit() for i in sol if hasattr(i, 'doit')]
         # Don't simplify it if it doesn't give anything.
         # This happens when solving for multiple variables symbolically
@@ -48,7 +49,7 @@ def _solve(expr, eq):
         if len(simplified):
             sol = simplified
 
-    if st.session_state.do_simplify:
+    if ss.do_simplify:
         expr = simplify(expr)
 
     new_sol = []
@@ -56,23 +57,23 @@ def _solve(expr, eq):
     # I had all this in ONE LINE if I didn't need a try except statement there
     for s in sol:
         if isinstance(s, (Dict, dict)):
-            if st.session_state.num_eval:
+            if ss.num_eval:
                 try:
-                    new_sol.append({key: round(N(val), st.session_state.do_round) for key, val in s.items()})
+                    new_sol.append({key: round(N(val), ss.do_round) for key, val in s.items()})
                 except TypeError as err:
                     new_sol.append({key: N(val) for key, val in s.items()})
             else:
                 new_sol.append(s)
         else:
-            if st.session_state.num_eval:
+            if ss.num_eval:
                 try:
-                    new_sol.append(round(N(s), st.session_state.do_round))
+                    new_sol.append(round(N(s), ss.do_round))
                 except TypeError as err:
                     new_sol.append(N(s))
             else:
                 new_sol.append(s)
 
-    if st.session_state.filter_imag:
+    if ss.filter_imag:
         real = list(filter(lambda i: I not in (i.atoms() if not isinstance(i, (Dict, dict)) else list(i.values())[0].atoms()), sol))
         # Only filter out the imaginary solutions if there are real solutions
         if len(real):
@@ -82,11 +83,11 @@ def _solve(expr, eq):
             sol = real
         elif len(sol) != len(real):
             st.toast('Only imaginary solutions available')
+
     return sol
 
 def show_sympy(expr, to=st):
     if isinstance(expr, (Dict, dict)):
-        # print('here')
         left, mid, right = to.columns((.2, .05, .65))
         left.write(ensure_not_iterable(expr.keys()))
         mid.write('#### =')
@@ -94,9 +95,9 @@ def show_sympy(expr, to=st):
         if isinstance(tmp, MatrixBase):
             right.dataframe(matrix2numpy(expr), hide_index=True, column_config={str(cnt): to.column_config.TextColumn(default='0', label='') for cnt in range(len(expr))})
         else:
-            if st.session_state.num_eval:
+            if ss.num_eval:
                 try:
-                    right.write(round(tmp, st.session_state.do_round))
+                    right.write(round(tmp, ss.do_round))
                 except:
                     right.write(tmp)
             else:
@@ -105,9 +106,9 @@ def show_sympy(expr, to=st):
         if isinstance(expr, MatrixBase):
             to.dataframe(matrix2numpy(expr), hide_index=True, column_config={str(cnt): to.column_config.TextColumn(default='0', label='') for cnt in range(len(expr))})
         else:
-            if st.session_state.num_eval:
+            if ss.num_eval:
                 try:
-                    to.write(round(expr, st.session_state.do_round))
+                    to.write(round(expr, ss.do_round))
                 except:
                     to.write(expr)
             else:
@@ -115,10 +116,10 @@ def show_sympy(expr, to=st):
 
 def reset_ui():
     """ Reset all the vars and the equal box, because we have a new expression provided """
-    if st.session_state['do_ui_reset']:
-        st.session_state['vars_dict'] = {}
-        st.session_state['eq'] = '0'
-        st.session_state['disable_eq'] = False
+    if ss['do_ui_reset']:
+        ss['vars_dict'] = {}
+        ss['eq'] = '0'
+        ss['disable_eq'] = False
 
 def split_matrix(mat):
     bulk = mat[:mat.cols-1, :mat.cols-1]

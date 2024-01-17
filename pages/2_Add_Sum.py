@@ -4,18 +4,10 @@ from streamlit_extras.grid import grid
 from streamlit_extras.switch_page_button import switch_page
 from src.parse import parse
 from src.helper import show_sympy
+from src.SS import ss
 
 st.set_page_config(layout='wide')
-st.session_state['_expr'] = st.session_state.get('_expr')
-
-if 'num_eval' not in st.session_state:
-    st.session_state['num_eval'] = False
-
-# Save the main UI state so we can come back to it
-st.session_state['_expr'] = st.session_state.get('_expr')
-st.session_state['eq'] = st.session_state.get('eq')
-st.session_state['vars_dict'] = st.session_state.get('vars_dict')
-
+ss.maintain_state()
 
 
 mode = st.radio('Mode', options=['Sum', 'Product'], horizontal=True)
@@ -26,9 +18,9 @@ end = _grid.text_input('End')
 _grid.empty()
 _grid.image('assets/sum_image.png' if mode == 'Sum' else 'assets/product.png', width=200)
 
-expr = _grid.text_input('Expression', st.session_state.get('_expr'))
+expr = _grid.text_input('Expression', ss._expr or '')
 # left, mid, right = st.columns([.45, .1, .45])
-var = _grid.text_input('Variable', list(st.session_state.vars_dict.keys())[0] if len(st.session_state.vars_dict.keys()) == 1 else '')
+var = _grid.text_input('Variable', list(ss.vars_dict.keys())[0] if len(ss.vars_dict.keys()) == 1 else '')
 _grid.markdown('# =')
 start = _grid.text_input('Start')
 
@@ -40,5 +32,5 @@ if len(var) and len(end) and len(start) and len(expr):
     left.code(result)
     show_sympy(parse(result))
     if right.button('Overwrite Main Expression'):
-        st.session_state['set_expr'] = result
+        ss['set_expr'] = result
         switch_page('main ')
