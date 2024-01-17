@@ -9,6 +9,8 @@ from sympy.plotting import plot, plot3d
 from src.SS import ss
 
 # Anything here will get preserved between pages, and is ensured to exist properly
+# Defaults are specified here, not in their own boxes
+# Set this up before the local imports, so they're setup by time they get called
 ss.setup(
     # Used for the code box
     prev_id=-1,
@@ -16,14 +18,17 @@ ss.setup(
     # An iterable of solutions
     solution=None,
     vars_dict={},
+    # The raw input. The parsed Expr input is expr
     _expr='',
     eq=0,
     func_name='f',
     interpret_as_latex=False,
     impl_mul=True,
+    do_template=False,
     do_solve=True,
     do_simplify=True,
-    do_it=True,
+    # Don't handle this here, so it changes with do_simplify
+    # do_it=True if ss.do_simplify is None else ss.do_simplify,
     num_eval=False,
     do_round=3,
     filter_imag=True,
@@ -33,8 +38,7 @@ ss.setup(
     do_ui_reset=True,
     use_area_box=False,
 )
-ss.update(__file__)
-print(ss.page_changed)
+ss.note_page(__file__)
 
 # This handles a very odd error that only comes up every other run
 try:
@@ -48,11 +52,6 @@ except KeyError:
 
 st.set_page_config(layout='wide')
 
-# The raw expression given
-# If we DO have it, and it's none, make it '', as well as if we don't have it
-# if ss._expr is None:
-#     ss['_expr'] = ''
-
 # Sidebar configs
 with st.sidebar:
     # Don't do this anymore. We now handle equal signs by putting them in the = box
@@ -60,6 +59,7 @@ with st.sidebar:
     func_name = st.text_input('Function Name',                   key='func_name',   value='f')
     interpret_as_latex = st.checkbox('Interpret input as LaTeX', key='interpret_as_latex',       help='The expression box will automatically detect LaTeX code for you. Click this to manually tell it that it is LaTeX, in case the detection doesnt work')
     impl_mul = st.checkbox('Implicit Multiplication',            key='impl_mul',    value=True,  help='Allows you to do things like `3x` and `3(x+1) without throwing errors')
+    do_template = st.checkbox('Include a Template Function',     key='do_template', value=False, help='Includes a Template function on which the base function gets called on')
     do_solve = st.checkbox('Solve',                              key='do_solve',    value=True,  help='Whether to solve the equation or not. Helpful if you want to look at things that take a long time to solve, like some integrals.')
     if do_solve:
         do_simplify = st.checkbox('Simplify Solutions',          key='do_simplify', value=True,  help='This reduces the equation down to its most simple form')
@@ -105,30 +105,55 @@ with st.sidebar:
         do_ui_reset = st.checkbox('Reset UI when a new expression is given', key='do_ui_reset', value=True, help='Reset the variables provided and the equals expression provided whenever the function is changed')
         use_area_box = st.checkbox('Use Text Area Instead of Single Line',   key='use_area_box', help='Instead of using a single line to specify the function, use a larger text box. Will wrap lines instead of scrolling them.')
 
-func_name_top_line = st.empty()
-func_name_same_line, right = st.columns([.2, .95])
-func_name_same_line.empty()
-
-_ex = ss.set_expr or ss._expr or ''
-# This is necissary so pages fill the main box properly for some reason
-ss._expr = _ex
-if 'set_expr' in ss:
-    del ss.set_expr
-box_type = right.text_area if use_area_box else right.text_input
-expr = parse(box_type(' ', label_visibility='hidden', key='_expr', on_change=reset_ui), interpret_as_latex)
-
 # This shouldn't be necissary. I have no idea why it is. And it's STILL inconsistent
 # This is for toasting units of constants we've replaced
 if (bread := ss.to_toast) is not None and len(bread):
     for _ in range(len(bread)):
         st.toast(bread.pop())
 
+if do_template:
+    # Template
+    temp_name_top_line = st.empty()
+    temp_name_same_line, temp_right = st.columns([.2, .95])
+    temp_name_same_line.empty()
+
+# Expr
+func_name_top_line = st.empty()
+func_name_same_line, func_right = st.columns([.2, .95])
+func_name_same_line.empty()
+
+if do_template:
+    temp_box_type = temp_right.text_area if use_area_box else temp_right.text_input
+    # The template box
+    temp = parse(temp_box_type(' ', label_visibility='hidden', key='_temp', on_change=reset_ui), interpret_as_latex)
+
+# The expr box
+_ex = ss.set_expr or ss._expr or ''
+# This is necissary so pages fill the main box properly for some reason
+ss._expr = _ex
+if 'set_expr' in ss:
+    del ss.set_expr
+func_box_type = func_right.text_area if use_area_box else func_right.text_input
+expr = parse(func_box_type(' ', label_visibility='hidden', key='_expr', on_change=reset_ui), interpret_as_latex)
+
 
 # Do all the things
 if expr is not None:
     vars = get_atoms(expr)
+    if do_template:
+        # Remove the func_name from the in-expression vars
+        temp_vars = set(get_atoms(temp)) - set(vars) - set((Symbol(func_name),))
 
-    # Show expr
+    # Show expr & template
+    if do_template:
+        # func_type = type(func_name, (Function,), {})
+        class _F(Function):
+            @classmethod
+            def eval(cls, *args):
+
+        show_sympy(temp.subs(Symbol(func_name)=_F))
+        # So it's in the middle
+        st.write(Symbol('->'))
     show_sympy(expr)
 
     # Top captions
@@ -143,6 +168,19 @@ if expr is not None:
         func_name_top_line.markdown(func_intro)
     else:
         func_name_same_line.markdown(func_intro)
+
+    # Set the update vars in the T(x) display at the top
+    if do_template and temp is not None:
+        # Add the func_name as the first custom var
+        # temp_intro = f'# T({",".join(map(str, [func_name] + vars))};{",".join(map(str, temp_vars))})='
+        # Or not
+        temp_intro = f'# T({",".join(map(str, vars))};{",".join(map(str, temp_vars))})='
+        if len(temp_intro) > 10:
+            temp_name_top_line.markdown(temp_intro)
+        else:
+            temp_name_same_line.markdown(temp_intro)
+    elif do_template:
+        temp_name_same_line.markdown(f'# T({",".join(map(str, vars))};)')
 
     st.divider()
 
@@ -279,5 +317,7 @@ if expr is not None:
 
 else:
     func_name_same_line.markdown('# f()=')
+    if do_template:
+        temp_name_same_line.markdown('# T()=')
 
 ss.reset_changed()
