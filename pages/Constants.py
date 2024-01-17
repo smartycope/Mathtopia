@@ -1,7 +1,7 @@
 import streamlit as st
 from src.SS import ss
 
-ss.maintain_state()
+ss.update(__file__)
 
 constants = {
     'speed_of_light': {

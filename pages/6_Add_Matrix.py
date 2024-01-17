@@ -5,7 +5,7 @@ from src.parse import parse
 from src.SS import ss
 
 st.set_page_config(layout='centered')
-ss.maintain_state()
+ss.update(__file__)
 
 left, right = st.columns(2)
 cols = right.number_input('Columns', value=3, min_value=1)

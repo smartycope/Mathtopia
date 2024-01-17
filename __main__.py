@@ -20,6 +20,8 @@ ss.setup(
     do_round=3,
     eq=0,
 )
+ss.update(__file__)
+print(ss.page_changed)
 
 # This handles a very odd error that only comes up every other run
 try:
@@ -32,8 +34,6 @@ except KeyError:
     st.rerun()
 
 st.set_page_config(layout='wide')
-
-print(ss.eq)
 
 # The raw expression given
 # If we DO have it, and it's none, make it '', as well as if we don't have it

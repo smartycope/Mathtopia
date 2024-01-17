@@ -2,7 +2,7 @@ import streamlit as st
 from src.SS import ss
 
 st.set_page_config(layout='wide')
-ss.maintain_state()
+ss.update(__file__)
 
 """
 # Welcome to Mathland!

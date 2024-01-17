@@ -9,7 +9,7 @@ from src.helper import show_sympy
 from src.SS import ss
 
 st.set_page_config(layout='wide')
-ss.maintain_state()
+ss.update(__file__)
 
 if 'states' not in ss:
     ss['states'] = []

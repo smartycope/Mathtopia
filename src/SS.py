@@ -4,7 +4,8 @@ from inspect import stack
 # from streamlit_javascript import st_javascript
 from time import time as now
 
-
+# TODO add more documentation
+# TODO add auto-page config options
 class SS:
     """ A better streamlit.session_state interface.
         There should only be 1 instance of this class, preferably in the main streamlit file. The
@@ -30,18 +31,6 @@ class SS:
 
     def __init__(self):
         st.session_state['ss'] = self
-        self.ensure_exist()
-
-    def setup(self, *args, **kwargs):
-        """ Pass default values of all the variables you're using
-            If a variable is provided, a default default value is set using the `default_default`
-            parameter.
-        """
-        # self.note_page(2)
-        self.update()
-        self.dict.update(kwargs)
-        # {a: self.default_default for a in args}
-        self.dict.update(dict(zip(args, repeat(self.default_default))))
         self.ensure_exist()
 
     def __setitem__(self, name:str, value):
@@ -76,6 +65,16 @@ class SS:
         return name in st.session_state
 
 
+    def setup(self, *args, **kwargs):
+        """ Pass default values of all the variables you're using
+            If a variable is provided, a default default value is set using the `default_default`
+            parameter.
+        """
+        self.dict.update(kwargs)
+        # {a: self.default_default for a in args}
+        self.dict.update(dict(zip(args, repeat(self.default_default))))
+        self.ensure_exist()
+
     def ensure_exist(self):
         for var, val in self.dict.items():
             if var not in st.session_state:
@@ -85,12 +84,10 @@ class SS:
             if '_prev_' + var not in st.session_state:
                 st.session_state['_prev_' + var] = None
 
-    def update(self):
-        self.check_changed()
+    def update(self, file):
+        self.note_page(file)
         if self.maintain:
             self.maintain_state()
-        else:
-            self.note_page(2)
 
     def check_changed(self):
         for var in self.dict.keys():
@@ -104,7 +101,6 @@ class SS:
 
     def maintain_state(self, *args, exclude=[], calls=1, **kwargs):
         """ Maintain the current variables with the values they currently have across pages """
-        self.note_page(calls + 1)
         if len(args):
             for var in args:
                 # Add the new var, if it's new
@@ -127,11 +123,13 @@ class SS:
                 self.dict[var] = val
             st.session_state[var] = val
 
-    def note_page(self, calls=1):
+    def note_page(self, file, calls=1):
+        self.check_changed()
         # This causes some very strange loop thing
         # file = st_javascript("await fetch('').then(r => window.parent.location.href)", key=now())
         # This will *only* work in pages directly, not functions in other files
-        file = stack()[-calls].filename
+        # This doesn't work, because the streamlit stack is what calls these things
+        # file = stack()[-calls].filename
 
         if 'current_page' not in st.session_state:
             st.session_state['current_page'] = file
@@ -143,7 +141,6 @@ class SS:
 
     def reset(self):
         """ Reset all variables to their defaults """
-        self.note_page(2)
         for var, val in self.dict.items():
             # The *_changed should stay accurate
             if var in st.session_state:
@@ -156,7 +153,6 @@ class SS:
 
     def init(self):
         """ Reset all variables to their defaults """
-        self.note_page(2)
         for var, val in self.dict.items():
             # Initialize the *_changed
             st.session_state[var + '_changed'] = True
@@ -166,7 +162,6 @@ class SS:
             st.session_state[var] = val
 
     def reset_changed(self):
-        self.note_page(2)
         for var in self.__dict__.keys():
             st.session_state[var + '_changed'] = False
 

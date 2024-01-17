@@ -7,7 +7,7 @@ from sympy import N
 from src.SS import ss
 
 st.set_page_config(layout='wide')
-ss.maintain_state()
+ss.update(__file__)
 
 ss['square'] = '90'
 invalid = False

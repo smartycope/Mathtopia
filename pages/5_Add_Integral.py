@@ -7,7 +7,7 @@ from src.helper import show_sympy
 from src.SS import ss
 
 st.set_page_config(layout='centered')
-ss.maintain_state()
+ss.update(__file__)
 
 _grid = grid([1, 1, 2], [4, 1, 1], [1, 1, 2], vertical_align="bottom")
 

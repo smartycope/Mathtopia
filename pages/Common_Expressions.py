@@ -3,7 +3,7 @@ from streamlit_extras.switch_page_button import switch_page
 from src.SS import ss
 
 st.set_page_config(layout='centered')
-ss.maintain_state()
+ss.update(__file__)
 
 def eq(expr):
     if st.button(expr):

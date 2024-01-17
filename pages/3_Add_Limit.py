@@ -6,7 +6,7 @@ from src.helper import show_sympy
 from src.SS import ss
 
 st.set_page_config(layout='centered')
-ss.maintain_state()
+ss.update(__file__)
 
 _, left, right = st.columns([.4, .1, .5])
 left.markdown('# lim')
