@@ -147,13 +147,14 @@ if expr is not None:
     # Show expr & template
     if do_template:
         # func_type = type(func_name, (Function,), {})
-        class _F(Function):
-            @classmethod
-            def eval(cls, *args):
+        # class _F(Function):
+        #     @classmethod
+        #     def eval(cls, *args):
 
-        show_sympy(temp.subs(Symbol(func_name)=_F))
+        # show_sympy(temp.subs(Symbol(func_name)=_F))
+        show_sympy(temp)
         # So it's in the middle
-        st.write(Symbol('->'))
+        # st.write(Symbol('->'))
     show_sympy(expr)
 
     # Top captions
