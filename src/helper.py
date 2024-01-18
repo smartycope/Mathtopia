@@ -5,8 +5,8 @@ from Cope import ensure_not_iterable
 import decimal
 from decimal import Decimal as D
 from src.parse import get_atoms
-
-ss = st.session_state.ss
+from src.SS import ss
+# ss = st.session_state.ss
 
 # if 'num_eval' not in ss:
 #     ss['num_eval'] = False

@@ -3,8 +3,8 @@ from Cope import RedirectStd, ensure_iterable
 from src.funcs import *
 import io
 from src.helper import show_sympy
-
-ss = st.session_state.ss
+from src.SS import ss
+# ss = st.session_state.ss
 
 def formatInput2code(s):
     # keywords = set(dir(builtins) + dir(er) + re.findall((lineStart + group(word) + ifFollowedBy(ow + '=')).str(), s))

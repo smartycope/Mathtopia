@@ -3,6 +3,7 @@ from itertools import repeat
 from inspect import stack
 # from streamlit_javascript import st_javascript
 from time import time as now
+from Cope import isiterable
 
 # TODO add more documentation
 # TODO add auto-page config options
@@ -29,27 +30,62 @@ class SS:
     default_default = None
     maintain = True
     dict = {}
+    query = set()
 
     def __init__(self):
         st.session_state['ss'] = self
         self.ensure_exist()
 
     def __setitem__(self, name:str, value):
-        # print(list(map(lambda i: i.filename + ' line ' + str(i.lineno), stack())))
-        # print(f'setting {name} to {value}')
         if name not in st.session_state:
-            # self.dict[name] = self.default_default
             st.session_state[name] = value
         st.session_state[name + '_changed'] = st.session_state[name] != value
         st.session_state['_prev_' + name] = st.session_state[name]
         st.session_state[name] = value
+        # If it's a variable we handle with query params
+        # TODO: handle lists and iterables and such
+        if name in self.query:
+            if isiterable(value, include_str=False):
+                raise NotImplementedError('At the moment, containers are not supported via query parameters')
+                # st.query_params[name] = str(value)
+            else:
+                st.query_params[name] = value
 
     def __setattr__(self, name:str, value):
         self.__setitem__(name, value)
 
     def __getitem__(self, name:str):
+        queried = None
+        session = None
+
+        if name in self.query and name in st.query_params:
+            queried = st.query_params[name]
+
         if name in st.session_state:
-            return st.session_state[name]
+            session = st.session_state[name]
+
+        if name == '_expr' or name == 'vars_dict':
+            print(f'getting {name}: query has {queried}, session has {session}')
+
+        # If we have both, we want to overwrite the query parameter with the session value.
+        # This is because:
+        # 1. First run variables are handled by add_query(), which takes all the values in the query
+        # parameters and adds them to the session state immediately
+        # 2. session state values may be edited by widgets without SS knowing. This ensures
+        # the query parameters remain up to date
+        # If we have a value in the session, and somehow don't have a query parameter, and we should,
+        # then add it
+        if session is not None and name in self.query:
+            st.query_params[name] = session
+            return session
+        # If we have a query parameter, and it's somehow not in the session_state, add it
+        elif session is None and queried is not None:
+            print('this shouldnt be running')
+            st.session_state[name] = queried
+            return queried
+
+        # return session or queried
+        return queried or session
 
     def __getattr__(self, name:str):
         return self.__getitem__(name)
@@ -66,20 +102,24 @@ class SS:
         return name in st.session_state
 
 
-    def setup(self, *args, **kwargs):
-        """ Pass default values of all the variables you're using
-            If a variable is provided, a default default value is set using the `default_default`
-            parameter.
+    def setup(self, *queries, **vars):
+        """ Pass default values of all the variables you're using.
+            If a variable is provided via args, and not given a default value, this sets it to be watched
+            by query parameters as well.
         """
-        self.dict.update(kwargs)
+        assert not len(set(queries) - set(vars.keys())), 'A query variable set isnt in the variables given with default values'
+        self.dict.update(vars)
         # {a: self.default_default for a in args}
-        self.dict.update(dict(zip(args, repeat(self.default_default))))
+        # self.dict.update(dict(zip(args, repeat(self.default_default))))
+        self.add_query(*queries)
         self.ensure_exist()
 
     def ensure_exist(self):
         for var, val in self.dict.items():
             if var not in st.session_state:
                 st.session_state[var] = val
+            if var in self.query and var not in st.query_params:
+                st.query_params[var] = st.session_state[var]
             if var + '_changed' not in st.session_state:
                 st.session_state[var + '_changed'] = True
             if '_prev_' + var not in st.session_state:
@@ -173,5 +213,18 @@ class SS:
     def watch(self, name, default=...):
         self.__dict__[name] = default if defaults is not Ellipsis else self.default_default
 
+    def add_query(self, *names):
+        """ Adds variables to be monitored with query parameters as well. Names must already be set
+            to be watched. This should only realistically be called once, in the main file.
+        """
+        for name in names:
+            if name not in self.dict:
+                raise ValueError(f"{name} not previously set to be watched, please provide a default.")
+            else:
+                self.query.add(name)
+            # If a query param is given (i.e. on first run via bookmark), we want to use *that* value
+            # and *not* the default.
+            # if name in st.query_params:
+                # self[name] = st.query_params[name]
 
 ss = SS()

@@ -11,7 +11,8 @@ from src.SS import ss
 # Anything here will get preserved between pages, and is ensured to exist properly
 # Defaults are specified here, not in their own boxes
 # Set this up before the local imports, so they're setup by time they get called
-ss.setup(
+func_name = 'f'
+ss.setup('_expr',
     # Used for the code box
     prev_id=-1,
     code={'text': '', 'id': -1},
@@ -21,7 +22,7 @@ ss.setup(
     # The raw input. The parsed Expr input is expr
     _expr='',
     eq=0,
-    func_name='f',
+    # func_name='f',
     interpret_as_latex=False,
     impl_mul=True,
     do_template=False,
@@ -35,9 +36,10 @@ ss.setup(
     do_plot=False,
     do_code=False,
     do_check_point=False,
-    do_ui_reset=True,
+    do_ui_reset=False,
     use_area_box=False,
 )
+# ss.add_query('_expr')
 ss.note_page(__file__)
 
 # This handles a very odd error that only comes up every other run
@@ -56,19 +58,20 @@ st.set_page_config(layout='wide')
 with st.sidebar:
     # Don't do this anymore. We now handle equal signs by putting them in the = box
     # remove_fx = st.checkbox('Auto-Remove `f(x) =`',              key='remove_fx',   value=True)
-    func_name = st.text_input('Function Name',                   key='func_name',   value='f')
-    interpret_as_latex = st.checkbox('Interpret input as LaTeX', key='interpret_as_latex',       help='The expression box will automatically detect LaTeX code for you. Click this to manually tell it that it is LaTeX, in case the detection doesnt work')
-    impl_mul = st.checkbox('Implicit Multiplication',            key='impl_mul',    value=True,  help='Allows you to do things like `3x` and `3(x+1) without throwing errors')
-    do_template = st.checkbox('Include a Template Function',     key='do_template', value=False, help='Includes a Template function on which the base function gets called on')
-    do_solve = st.checkbox('Solve',                              key='do_solve',    value=True,  help='Whether to solve the equation or not. Helpful if you want to look at things that take a long time to solve, like some integrals.')
+    # func_name = st.text_input('Function Name',                   key='func_name')
+    interval_container = st.container()
+    impl_mul = st.checkbox('Implicit Multiplication',            key='impl_mul',    help='Allows you to do things like `3x` and `3(x+1) without throwing errors')
+    interpret_as_latex = st.checkbox('Interpret input as LaTeX', key='interpret_as_latex', help='The expression box will automatically detect LaTeX code for you. Click this to manually tell it that it is LaTeX, in case the detection doesnt work')
+    do_template = st.checkbox('Include a Template Function',     key='do_template', help='Includes a Template function on which the base function gets called on')
+    do_solve = st.checkbox('Solve',                              key='do_solve',    help='Whether to solve the equation or not. Helpful if you want to look at things that take a long time to solve, like some integrals.')
     if do_solve:
-        do_simplify = st.checkbox('Simplify Solutions',          key='do_simplify', value=True,  help='This reduces the equation down to its most simple form')
-        do_it = st.checkbox('Evaluate Solutions',                key='do_it',       value=do_simplify, help='This is distinct from simplifying the expression. Simplifying will reduce down to, say, an integral, as opposed to actually evaluating (symbolically) the integral.')
-        num_eval = st.checkbox('Give Non-Symbolic Solutions',    key='num_eval',    value=False, help='Evaluate the function numerically instead of symbolically')
+        do_simplify = st.checkbox('Simplify Solutions',          key='do_simplify', help='This reduces the equation down to its most simple form')
+        do_it = st.checkbox('Evaluate Solutions',                key='do_it',       help='This is distinct from simplifying the expression. Simplifying will reduce down to, say, an integral, as opposed to actually evaluating (symbolically) the integral.')
+        num_eval = st.checkbox('Give Non-Symbolic Solutions',    key='num_eval',    help='Evaluate the function numerically instead of symbolically')
         _do_round = st.empty()
-        filter_imag = st.checkbox('Only Inlcude Real Solutions', key='filter_imag', value=True,  help='Whether we should include answers with `i` in them or not')
-    do_plot = st.checkbox('Plot the function',                   key='do_plot',     value=False, help='Only 1 and 2 unknowns can be plotted')
-    do_code = st.checkbox('Include Custom Code Box',             key='do_code',     value=False, help='Adds a code area where we can run Python & sympy code directly on the expression')
+        filter_imag = st.checkbox('Only Inlcude Real Solutions', key='filter_imag', help='Whether we should include answers with `i` in them or not')
+    do_plot = st.checkbox('Plot the function',                   key='do_plot',     help='Only 1 and 2 unknowns can be plotted')
+    do_code = st.checkbox('Include Custom Code Box',             key='do_code',     help='Adds a code area where we can run Python & sympy code directly on the expression')
     do_check_point = st.empty()
     if st.button('Reset Variables', key='reset_vars', help='Reset all variables back to their Symbols'):
         for v in ss.vars_dict.keys():
@@ -102,7 +105,7 @@ with st.sidebar:
         copy_full_expression = right.empty()
 
     with st.expander('Advanced Options'):
-        do_ui_reset = st.checkbox('Reset UI when a new expression is given', key='do_ui_reset', value=True, help='Reset the variables provided and the equals expression provided whenever the function is changed')
+        do_ui_reset = st.checkbox('Reset UI when a new expression is given', key='do_ui_reset',  help='Reset the variables provided and the equals expression provided whenever the function is changed')
         use_area_box = st.checkbox('Use Text Area Instead of Single Line',   key='use_area_box', help='Instead of using a single line to specify the function, use a larger text box. Will wrap lines instead of scrolling them.')
 
 # This shouldn't be necissary. I have no idea why it is. And it's STILL inconsistent
@@ -156,6 +159,20 @@ if expr is not None:
         # So it's in the middle
         # st.write(Symbol('->'))
     show_sympy(expr)
+
+    # Handle interval box
+    if len(vars) == 1:
+        interval_container.write('Interval')
+        left, right = interval_container.columns(2)
+        left.checkbox('Left Open')
+        right.checkbox('Right Open')
+        left, right = interval_container.columns(2)
+        left_interval = left.text_input(f'{vars[0]} <', key='left_interval')
+        right_interval = right.text_input(f'{vars[0]} >', key='right_interval')
+        # mid.write(f'# < {vars[0]} <')
+        # lt1.write('## <')
+        # lt2.write('## <')
+        # x.write(vars[0])
 
     # Top captions
     left, right = st.columns((.65, .35))
