@@ -4,24 +4,25 @@ from sympy import *
 from Cope import ensure_not_iterable, confidence
 import decimal
 from decimal import Decimal as D
-from src.parse import get_atoms
+from src.parse import get_atoms, parse
 from src.SS import ss
 
 
-def _solve(expr, eq):
+def _solve(expr, i):
+    eq = parse(ss[f'eq{i}']) or S(0)
     # If it's a Matrix, don't solve it, main will handle it
     if isinstance(expr, MatrixBase):
         return expr
 
     # If we've specified all the variables, don't solve, just return the expression verbatim
-    if all(key != val for key, val in ss.vars_dict.items()):
+    if all(key != val for key, val in ss.vars[i].items()):
         # Make a Symbol that looks like a function call, for when we display it in the solutions box
-        fake_func_call = f'f({",".join(map(str, ss.vars_dict.values()))})'
+        fake_func_call = f'f({",".join(map(str, ss.vars[i].values()))})'
         sol = [{Symbol(fake_func_call): expr}]
 
         ss.check_changed()
-        if ss.disable_eq is False or ss.vars_dict_changed:
-            ss.disable_eq = str(expr)
+        if ss[f'disable_eq{i}'] is False or ss.vars_changed:
+            ss[f'disable_eq{i}'] = str(expr)
             # We have to rerun once here (and in the else statement below) so the UI will immediately
             # reflect the change we've made here
             # In addition, we only want to rerun if we've made a change, otherwise we get stuck in an
@@ -29,8 +30,8 @@ def _solve(expr, eq):
             st.rerun()
     else:
         # is not False here: it gets set to a string when true
-        if ss.disable_eq is not False:
-            ss.disable_eq = False
+        if ss[f'disable_eq{i}'] is not False:
+            ss[f'disable_eq{i}'] = False
             st.rerun()
 
         # Solve for *all* the variables, not just a random one
@@ -42,7 +43,7 @@ def _solve(expr, eq):
         st.toast(':warning: No solutions exist')
 
     if ss.do_it:
-        simplified = [i.doit() for i in sol if hasattr(i, 'doit')]
+        simplified = [k.doit() for k in sol if hasattr(k, 'doit')]
         # Don't simplify it if it doesn't give anything.
         # This happens when solving for multiple variables symbolically
         # We want to let the dic stuff below handle that.
@@ -74,7 +75,7 @@ def _solve(expr, eq):
                 new_sol.append(s)
 
     if ss.filter_imag:
-        real = list(filter(lambda i: I not in (i.atoms() if not isinstance(i, (Dict, dict)) else list(i.values())[0].atoms()), sol))
+        real = list(filter(lambda k: I not in (k.atoms() if not isinstance(k, (Dict, dict)) else list(k.values())[0].atoms()), sol))
         # Only filter out the imaginary solutions if there are real solutions
         if len(real):
             # If we filtered any out, notify the user
@@ -117,7 +118,7 @@ def show_sympy(expr, to=st):
 def reset_ui():
     """ Reset all the vars and the equal box, because we have a new expression provided """
     if ss['do_ui_reset']:
-        ss['vars_dict'] = {}
+        ss['vars'] = {}
         ss['eq'] = '0'
         ss['disable_eq'] = False
 

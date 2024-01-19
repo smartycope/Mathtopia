@@ -25,13 +25,15 @@ def formatInput2code(s):
 def run_code(code, rtn_tab, output_tab, errors_tab):
         std = io.StringIO()
         err = io.StringIO()
-        expr = ss.expr
         solution = ss.solution
         equals = ss.eq
-        vars = ss.vars_dict
+        vars = ss.vars
+        # exprs = ss.exprs
 
         _locals = locals()
         _locals[ss.func_name] = lambda *args: expr.subs(vars)
+        for i in range(ss.num_funcs):
+            _locals
         with RedirectStd(stdout=std, stderr=err):
             try:
                 exec(formatInput2code(code), globals(), _locals)

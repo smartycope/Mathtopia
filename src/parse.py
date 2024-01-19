@@ -100,6 +100,9 @@ def get_atoms(expr):
             isinstance(i, Symbol) and
             str(i) not in ('-', '+', ' ', '')
         )
+    if expr is None:
+        return []
+
     atoms = list(filter(atom_filter, expr.atoms()))
     # if isinstance(expr, MatrixBase):
         # atoms += [Symbol(f'col_{i}') for i in range(expr.cols)]
@@ -136,7 +139,7 @@ def parse(text, manual_latex=False, replace_constants=True) -> Expr:
     # print('attempting to parse ', text, ' ', sep='`')
     #* If there's nothing there, it's okay
     if text is None or not len(text.strip()):
-        return
+        return S(0)
 
     #* Now calculate everything
     # First, run the input string through our function to make sure we take care
