@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from sympy import *
 from Cope import ensure_not_iterable, confidence
 import decimal
+from Cope.sympy import *
 from decimal import Decimal as D
 from src.parse import get_atoms, parse
 from src.SS import ss
@@ -40,7 +41,7 @@ def _solve(expr, i):
             sol += solve(Eq(expr, eq), var, dict=True, simplify=ss.do_simplify)
 
     if not len(sol):
-        st.toast(':warning: No solutions exist')
+        st.toast(f':warning: No solutions exist for function {ss.func_names[i]}')
 
     if ss.do_it:
         simplified = [k.doit() for k in sol if hasattr(k, 'doit')]
@@ -80,10 +81,10 @@ def _solve(expr, i):
         if len(real):
             # If we filtered any out, notify the user
             if len(sol) != len(real):
-                st.toast('Imaginary Solutions Hidden')
+                st.toast(f'Imaginary Solutions Hidden for {ss.func_names[i]}')
             sol = real
         elif len(sol) != len(real):
-            st.toast('Only imaginary solutions available')
+            st.toast(f'Only imaginary solutions available for {ss.func_names[i]}')
 
     return sol
 
@@ -114,6 +115,23 @@ def show_sympy(expr, to=st):
                     to.write(expr)
             else:
                 to.write(expr)
+
+def caption(expr, vars, interval):
+    if expr is None: return
+    # "Parsed as"
+    a, b, c, d = st.columns(4)
+    a.caption(f"Parsed as: `{expr}`")
+
+    if len(vars) == 1:
+        var = list(vars)[0]
+        # Categories
+        d.caption(f'Catagories: `{tuple(categorize(expr, var))}`')
+
+        c.caption('In Interval: `' + str(get_interval_desc(expr, var, interval)) + '`')
+
+        # Min max
+        min, max = min_max(expr, var)
+        b.caption(f'Min: {min}, Max: {max}')
 
 def reset_ui():
     """ Reset all the vars and the equal box, because we have a new expression provided """

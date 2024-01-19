@@ -7,7 +7,7 @@ ss.update(__file__)
 
 def eq(expr):
     if st.button(expr):
-        ss['set_expr'] = expr
+        ss._exprs[0] = expr
         switch_page('main ')
     # For some reason this causes in infinite loop of some sort??
     # show_sympy(parse(expr))

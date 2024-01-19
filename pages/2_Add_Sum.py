@@ -16,10 +16,9 @@ _grid = grid([1, 2], [1, 1], [1, .35, 1, 4], vertical_align="center")
 end = _grid.text_input('End')
 _grid.empty()
 _grid.image('assets/sum_image.png' if mode == 'Sum' else 'assets/product.png', width=200)
-
-expr = _grid.text_input('Expression', ss._expr or '')
+expr = _grid.text_input('Expression', ss._exprs[0])
 # left, mid, right = st.columns([.45, .1, .45])
-var = _grid.text_input('Variable', list(ss.vars_dict.keys())[0] if len(ss.vars_dict.keys()) == 1 else '')
+var = _grid.text_input('Variable', list(ss.vars[0].keys())[0] if len(ss.vars[0].keys()) == 1 else '')
 _grid.markdown('# =')
 start = _grid.text_input('Start')
 
@@ -31,5 +30,5 @@ if len(var) and len(end) and len(start) and len(expr):
     left.code(result)
     show_sympy(parse(result))
     if right.button('Overwrite Main Expression'):
-        ss['set_expr'] = result
+        ss._exprs[0] = result
         switch_page('main ')

@@ -33,6 +33,7 @@ r.markdown('Condition')
 states = []
 for i in range(len(ss.states) + 1):
     l, m, r = right.columns((.45, .1, .45))
+    # Note, this is DIFFERENT than _expr{i}, which we're using in main
     expr = l.text_input(' ', label_visibility='hidden', key=f'{i}_expr')
     m.markdown('# for')
     condition = r.text_input(' ', label_visibility='hidden', key=f'{i}_condition')
@@ -58,5 +59,5 @@ if len(states):
     show_sympy(parse(result))
 
     if right.button('Overwrite Main Expression'):
-        ss['set_expr'] = result
+        ss._exprs[0] = result
         switch_page('main ')

@@ -52,6 +52,24 @@ def _sanatizeLatex(latex):
 def _convertLatex(s):
     return str(parse_latex(_sanatizeLatex(s)))
 
+def detect_equals(s, expr_index) -> ('lhs', 'rhs'):
+    # These have the same groups, and shouldn't both be in the same equation (that doesn't make sense)
+    m = re.search(doubleEqRegex, s) or re.search(eqRegex, s)
+    if m is not None:
+        # eq = m.group(1)
+        # ss['set_expr'] = m.group(1)
+        # ss._exprs[expr_index] = m.group(1)
+        return m.group(1), m.group(2)
+        # ss[f'_expr{i}'] = m.group(1)
+        # ss._eqs[expr_index] = m.group(2)
+        # Because this is being called parse(), which is being called just after
+        # we get the text from the user, rerun so it loads the updated text given here
+        print('rerunning...')
+        # st.rerun()
+    else:
+        return s, None
+
+
 def _sanatizeInput(eq:str, replace_constants=True):
     for symbol, replacement in replacements.items():
         eq = re.sub(symbol, replacement, eq)
@@ -71,20 +89,11 @@ def _sanatizeInput(eq:str, replace_constants=True):
                 # (for some scudding reason)
                 st.toast(f"{default} is in units of {replacement['unit']}")
 
-    eRegex = 'e' + er.ifNotPrecededBy(er.wordChar) + er.ifNotFollowedBy(er.wordChar)
-    eq = re.sub(str(eRegex), 'E', eq)
+    # eRegex = 'e' + er.ifNotPrecededBy(er.wordChar) + er.ifNotFollowedBy(er.wordChar)
+    # eq = re.sub(str(eRegex), 'E', eq)
 
-    eq = re.subn(arrowRegex,    r'Lambda(\g<1>, \g<2>)', eq, 1)[0]
+    eq = re.subn(arrowRegex, r'Lambda(\g<1>, \g<2>)', eq, 1)[0]
 
-    # These have the same groups, and shouldn't both be in the same equation (that doesn't make sense)
-    m = re.search(doubleEqRegex, eq) or re.search(eqRegex, eq)
-    if m is not None:
-        eq = m.group(1)
-        ss['set_expr'] = m.group(1)
-        ss['eq'] = m.group(2)
-        # Because this is being called parse(), which is being called just after
-        # we get the text from the user, rerun so it loads the updated text given here
-        st.rerun()
 
     # eq = re.subn(eqRegex,       r'\g<2> - \g<1>', eq, 1)[0]
     # eq = re.subn(doubleEqRegex, r'Eq(\g<1>, \g<2>)',     eq, 1)[0]
@@ -139,7 +148,7 @@ def parse(text, manual_latex=False, replace_constants=True) -> Expr:
     # print('attempting to parse ', text, ' ', sep='`')
     #* If there's nothing there, it's okay
     if text is None or not len(text.strip()):
-        return S(0)
+        return
 
     #* Now calculate everything
     # First, run the input string through our function to make sure we take care
