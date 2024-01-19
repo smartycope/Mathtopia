@@ -1,7 +1,8 @@
-PRODUCTS
-SLOPE EQUATION
-MASTER SOLVE?
-UNITS?
+order variables better
+products
+slope equation
+master solve?
+units?
 not transformations, but arbitrary amounts of functions that can interact in specified ways/systems of equations
 query params
 f(x) = sqrt(x), x=x, eq=-1: causes eq box to think x is specified (disables itself)
@@ -9,3 +10,4 @@ find the domain and range of the function
 a box where you specify an interval, and it tells you if the function is constant, increasing, decreasing, positive, negative, or nonnegative across that interval
      if the DERIVATIVE of a function is positive on an interval, then the function is increasing on that interval. If the DERIVATIVE of a function is negative on an interval, then the function is decreasing on that interval.
 add assumtions to variables you specify https://docs.sympy.org/latest/guides/assumptions.html
+move SS to Cope

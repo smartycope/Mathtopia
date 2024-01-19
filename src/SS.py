@@ -4,10 +4,12 @@ from inspect import stack
 # from streamlit_javascript import st_javascript
 from time import time as now
 from Cope import isiterable
+import pickle
 
 # TODO add more documentation
 # TODO add auto-page config options
-# TODO add query params
+# TODO fix query params between switching pages
+# TODO fix just_loaded
 class SS:
     """ A better streamlit.session_state interface.
         There should only be 1 instance of this class, preferably in the main streamlit file. The
@@ -45,11 +47,7 @@ class SS:
         # If it's a variable we handle with query params
         # TODO: handle lists and iterables and such
         if name in self.query:
-            if isiterable(value, include_str=False):
-                raise NotImplementedError('At the moment, containers are not supported via query parameters')
-                # st.query_params[name] = str(value)
-            else:
-                st.query_params[name] = value
+            self._set_query_param(name, value)
 
     def __setattr__(self, name:str, value):
         self.__setitem__(name, value)
@@ -59,13 +57,10 @@ class SS:
         session = None
 
         if name in self.query and name in st.query_params:
-            queried = st.query_params[name]
+            queried = self._get_query_param(name)
 
         if name in st.session_state:
             session = st.session_state[name]
-
-        if name == '_expr' or name == 'vars_dict':
-            print(f'getting {name}: query has {queried}, session has {session}')
 
         # If we have both, we want to overwrite the query parameter with the session value.
         # This is because:
@@ -76,11 +71,10 @@ class SS:
         # If we have a value in the session, and somehow don't have a query parameter, and we should,
         # then add it
         if session is not None and name in self.query:
-            st.query_params[name] = session
+            self._set_query_param(name, session)
             return session
         # If we have a query parameter, and it's somehow not in the session_state, add it
         elif session is None and queried is not None:
-            print('this shouldnt be running')
             st.session_state[name] = queried
             return queried
 
@@ -102,6 +96,16 @@ class SS:
         return name in st.session_state
 
 
+    def _set_query_param(self, name, to):
+        if isinstance(to, dict):
+            to = {repr(key): repr(val) for key, val in to.items()}
+        elif isinstance(to, (list, tuple, set)):
+            to = type(to)([repr(i) for i in to])
+        st.query_params[name] = repr(to)
+
+    def _get_query_param(self, name):
+        return eval(st.query_params[name])
+
     def setup(self, *queries, **vars):
         """ Pass default values of all the variables you're using.
             If a variable is provided via args, and not given a default value, this sets it to be watched
@@ -119,7 +123,7 @@ class SS:
             if var not in st.session_state:
                 st.session_state[var] = val
             if var in self.query and var not in st.query_params:
-                st.query_params[var] = st.session_state[var]
+                self._set_query_param(var, st.session_state[var])
             if var + '_changed' not in st.session_state:
                 st.session_state[var + '_changed'] = True
             if '_prev_' + var not in st.session_state:
@@ -224,7 +228,13 @@ class SS:
                 self.query.add(name)
             # If a query param is given (i.e. on first run via bookmark), we want to use *that* value
             # and *not* the default.
-            # if name in st.query_params:
-                # self[name] = st.query_params[name]
+            # But we want it to *only* run once, the first time the page loads. Otherwise, we'll be
+            # resetting values set the previous run by widgets, which we don't want.
+            if 'just_loaded' not in st.session_state:
+                st.session_state['just_loaded'] = True
+                for name in st.query_params.to_dict().keys():
+                    st.session_state[name] = self._get_query_param(name)
+            else:
+                st.session_state['just_loaded'] = False
 
 ss = SS()

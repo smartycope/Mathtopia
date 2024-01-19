@@ -1,36 +1,26 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 from sympy import *
-from Cope import ensure_not_iterable
+from Cope import ensure_not_iterable, confidence
 import decimal
 from decimal import Decimal as D
 from src.parse import get_atoms
 from src.SS import ss
-# ss = st.session_state.ss
 
-# if 'num_eval' not in ss:
-#     ss['num_eval'] = False
-# if 'vars_dict' not in ss:
-#     ss['vars_dict'] = {}
 
 def _solve(expr, eq):
     # If it's a Matrix, don't solve it, main will handle it
     if isinstance(expr, MatrixBase):
         return expr
 
-    # Solve for *all* the variables, not just a random one
-    sol = []
-    for var in (get_atoms(expr) + get_atoms(eq)):
-        sol += solve(Eq(expr, eq), var, dict=True, simplify=ss.do_simplify)
-
-    # If we've passed parameters, there's nothing to solve, just return expr verbatim
-    if not len(sol):
+    # If we've specified all the variables, don't solve, just return the expression verbatim
+    if all(key != val for key, val in ss.vars_dict.items()):
         # Make a Symbol that looks like a function call, for when we display it in the solutions box
-        fake_func_call = f'{ss.func_name}({",".join(map(str, ss.vars_dict.values()))})'
+        fake_func_call = f'f({",".join(map(str, ss.vars_dict.values()))})'
         sol = [{Symbol(fake_func_call): expr}]
 
         ss.check_changed()
-        if ss.disable_eq is False or ss.vars_dict_changed:#ss.eq != str(expr):
+        if ss.disable_eq is False or ss.vars_dict_changed:
             ss.disable_eq = str(expr)
             # We have to rerun once here (and in the else statement below) so the UI will immediately
             # reflect the change we've made here
@@ -38,10 +28,18 @@ def _solve(expr, eq):
             # infinite loop
             st.rerun()
     else:
-        # is not False here, it gets set to a string when true
+        # is not False here: it gets set to a string when true
         if ss.disable_eq is not False:
             ss.disable_eq = False
             st.rerun()
+
+        # Solve for *all* the variables, not just a random one
+        sol = []
+        for var in (get_atoms(expr) + get_atoms(eq)):
+            sol += solve(Eq(expr, eq), var, dict=True, simplify=ss.do_simplify)
+
+    if not len(sol):
+        st.toast(':warning: No solutions exist')
 
     if ss.do_it:
         simplified = [i.doit() for i in sol if hasattr(i, 'doit')]
@@ -127,3 +125,130 @@ def split_matrix(mat):
     bulk = mat[:mat.cols-1, :mat.cols-1]
     end = mat[:mat.cols-1, mat.cols-1]
     return bulk, end
+
+
+def critical_points(expr, var, interval=...) -> tuple:
+    diff = expr.diff(var)
+    if interval is not Ellipsis:
+        return [ans for ans in solve(diff, var) if ans in interval]
+    else:
+        return solve(diff, var)
+
+# @confidence(90)
+# def getCriticalPoints(expr, var, interval=Interval(-oo, oo), order=1) -> 'iterable':
+#     return ensureIterable(solveset(Eq(expr.diff(var, order), 0), var, domain=interval).simplify())
+    # return solveset(Derivative(expr, (var, order)), var, domain=S.Reals).simplify()
+
+
+@confidence(80)
+def getCriticalIntervals(expr, var, overInterval=Interval(-oo, oo)):
+    criticalPoints = getCriticalPoints(expr, var)
+    criticalPoints = [overInterval.start] + sorted(list(criticalPoints)) + [overInterval.end]
+
+    intervals = []
+    for i in range(len(criticalPoints) - 1):
+        intervals.append(Interval(criticalPoints[i], criticalPoints[i+1]))
+    return intervals
+
+@confidence(49)
+def getCriticalPointsOverInterval(expr, var, interval, order=1):
+    #* THIS SHOULD WORK DANG IT
+    # return [i for i in ensureIterable(solveset(expr.diff(var, order), var)) if isBetween(i, interval.start, interval.end)]
+    # try:
+    #     a, b = solveset(Derivative(expr, (var, order)), var, domain=interval)
+    # except:
+    #     a = solveset(Derivative(expr, (var, order)), var, domain=interval)
+    #     b = None
+    # ans = []
+    # if isBetween(a, interval.start, interval.end):
+    #     ans.append(a)
+    # if isBetween(b, interval.start, interval.end):
+    #     ans.append(b)
+    # return ans
+    start = expr.subs(var, interval.start)
+    end = expr.subs(var, interval.end)
+    crit = getCriticalPoints(expr, var)
+    evalPoints = []
+    solvedEvalPoints = []
+
+    for i in crit:
+        i = i.simplify()
+        if is_between(i, interval.start, interval.end, True, True):
+            evalPoints.append(i)
+    # print('Critical Points between the interval:', evalPoints)
+    return evalPoints
+
+def min_max(expr, var, interval=...) -> (('minx', 'miny'), ('maxx', 'maxy')):
+    crit_points = critical_points(expr, var, interval=...)
+    crit_values = [(point, expr.subs(var, point)) for point in crit_points]
+    if len(crit_values):
+        return min(crit_values, key=lambda i: i[1]), max(crit_values, key=lambda i: i[1])
+    else:
+        return (tuple(), tuple())
+
+# @confidence('sorta')
+def minMaxOverInterval(expr, var, interval) -> (('minx', 'miny'), ('maxx', 'maxy')):
+    start = expr.subs(var, interval.start)
+    end = expr.subs(var, interval.end)
+    crit = getCriticalPoints(expr, var)
+    evalPoints = []
+    solvedEvalPoints = []
+
+    for i in crit:
+        i = i.simplify()
+        # if is_between(i, interval.start, interval.end, True, True):
+        if i in interval:
+            evalPoints.append(i)
+
+    #* This for loop does work and i have NO idea why
+    # for k in evalPoints:
+        # print('running:', k)
+        # solvedEvalPoints.append(expr.subs(var, k))
+    solvedEvalPoints.append(expr.subs(var, evalPoints[0]))
+    solvedEvalPoints.append(expr.subs(var, evalPoints[1]))
+
+    solvedEvalPoints += [start, end]
+    for i in crit:
+        try:
+            solvedEvalPoints.remove(i)
+        except: pass
+    return (min(solvedEvalPoints).simplify(), min(crit)), (max(solvedEvalPoints).simplify(), max(crit))
+    # return f'Min: {min(solvedEvalPoints).simplify()} at {var} = {min(crit)}, Max: {max(solvedEvalPoints).simplify()} at {var} = {max(crit)}'
+
+
+def get_interval_desc(expr, var, interval):
+    rtn = ['constant', 'increasing', 'decreasing']
+    diff = expr.diff(var, 1)
+
+    crit = critical_points(expr, var, interval)
+
+    if not len(crit):
+        rtn.clear()
+
+    for point in crit:
+        # constant
+        if diff.subs(var, point) == 0:
+            rtn.remove('increasing')
+            rtn.remove('decreasing')
+        # increasing
+        elif diff.subs(var, point) > 0:
+            rtn.remove('decreasing')
+            rtn.append('constant')
+        # decreasing
+        else:
+            rtn.append('constant')
+            rtn.append('increasing')
+
+    minmax = min_max(expr, var, interval)
+    if len(minmax[0]):
+        # If min > 0, they're all positive
+        if minmax[0][1] > 0:
+            rtn.append('positive')
+        # If max < 0, they're all negative
+        if minmax[1][1] < 0:
+            rtn.append('negative')
+        # Save as positive, except >=
+        if minmax[0][1] >= 0:
+            rtn.append('nonnegative')
+
+    return rtn

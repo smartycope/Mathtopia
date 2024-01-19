@@ -36,7 +36,7 @@ replacements = {
 }
 
 def _detectLatex(s):
-    return '\\' in s or '{' in s or '}' in s
+    return '\\' in s or '{' in s or '}' in s or '$' in s
 
 def _sanatizeLatex(latex):
     if latex[-1] == '.':
