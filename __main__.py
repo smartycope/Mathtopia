@@ -12,7 +12,7 @@ from itertools import repeat
 # Anything here will get preserved between pages, and is ensured to exist properly
 # Defaults are specified here, not in their own boxes
 # Set this up before the local imports, so they're setup by time they get called
-ss.setup('_exprs',
+ss.setup(
     # Used for the code box
     prev_id=-1,
     code={'text': '', 'id': -1},
@@ -149,10 +149,15 @@ if 'set_expr' in ss:
 # ─── The other function boxes ───────────────────────────────────────────────────
 exprs = []
 for i in range(num_funcs):
-    _ex = ss._exprs[i] or ''
-    ss._exprs[i] = _ex
+    if len(ss._exprs) > i:
+        _ex = ss._exprs[i]
+    else:
+        _ex = ''
+
+    _ex = ss[f'_expr{i}'] or _ex
+    ss[f'_expr{i}'] = _ex
     box_type = funcs_right[i].text_area if use_area_box else funcs_right[i].text_input
-    # The template box
+
     exprs.append(parse(box_type(' ', label_visibility='hidden', key=f'_expr{i}', on_change=reset_ui), interpret_as_latex))
 
 
@@ -228,8 +233,8 @@ for i in range(num_funcs):
     v = vars[i]
     if len(v):
         'Solve for:'
-        a, *b, c, d = st.columns([.05] + ([.7/len(v)]*len(v)) + [.15, .2])
-        a.markdown(f'## {func_name}(')
+        a, *b, c, d = st.columns([.08] + ([.7/len(v)]*len(v)) + [.15, .2])
+        a.markdown(f'## {func_names[i]}(')
         ss.check_changed()
         # First, all the variable boxes
         for s, v in zip(b, v):
