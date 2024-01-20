@@ -160,9 +160,7 @@ if (bread := ss.to_toast) is not None and len(bread):
         st.toast(bread.pop())
 
 # ─── The expr boxes ────────────────────────────────────────────────────────────
-# Dict of parsed expressions that don't have the variable values subsituted yet
 unsubbed_exprs = {}
-# Dict of {index: set(Symbols)} of varibles in each expression
 var_variables = {}
 for i in range(num_funcs):
     # If we have a previous box value, set it to the current box value

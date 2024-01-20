@@ -4,6 +4,7 @@ from src.funcs import *
 import io
 from src.helper import show_sympy
 from src.SS import ss
+from src.parse import parse
 # ss = st.session_state.ss
 
 def formatInput2code(s):
@@ -25,15 +26,16 @@ def formatInput2code(s):
 def run_code(code, rtn_tab, output_tab, errors_tab):
         std = io.StringIO()
         err = io.StringIO()
-        solution = ss.solution
-        equals = ss.eq
-        vars = ss.vars
-        # exprs = ss.exprs
 
         _locals = locals()
         _locals[ss.func_name] = lambda *args: expr.subs(vars)
         for i in range(ss.num_funcs):
-            _locals
+            _locals[f'{ss.func_names[i]}'] = ss.exprs[i]
+            _locals[f'{ss.func_names[i]}_vars'] = ss.vars[i]
+            _locals[f'{ss.func_names[i]}_equals'] = parse(ss[f'_eq{i}'])
+            if len(ss.solutions) > i:
+                _locals[f'{ss.func_names[i]}_solutions'] = ss.solutions[i]
+
         with RedirectStd(stdout=std, stderr=err):
             try:
                 exec(formatInput2code(code), globals(), _locals)
