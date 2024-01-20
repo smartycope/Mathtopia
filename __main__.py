@@ -12,7 +12,7 @@ from itertools import repeat
 # Anything here will get preserved between pages, and is ensured to exist properly
 # Defaults are specified here, not in their own boxes
 # Set this up before the local imports, so they're setup by time they get called
-ss.setup(
+ss.setup('exprs', 'impl_mul', 'do_plot',
     # Used for the code box
     prev_id=-1,
     code={'text': '', 'id': -1},
@@ -29,7 +29,7 @@ ss.setup(
     do_round=3,
     filter_imag=True,
     do_plot=False,
-    plot_num=0,
+    plot_num='all',
     do_code=False,
     do_check_point=False,
     do_ui_reset=False,
@@ -50,7 +50,6 @@ try:
 except KeyError:
     print('Weird error, rerunning')
     st.rerun()
-
 
 # An explanation of variables:
     # Raw values. These are also keys to their respective widgets
@@ -83,6 +82,16 @@ except KeyError:
     #   They're unsubbed, but the functions in them have been resolved.
     # var_variables = {}
     #   Dict of {index: set(Symbols)} of varibles in each expression
+
+# If we've just loaded and there's query parameters, load them
+if ss.just_loaded:
+    print(ss.exprs)
+    if ss.exprs is not None:
+        for i, val in ss.exprs.items():
+            ss[f'_expr{i}'] = val
+    ss.num_funcs = len(ss.exprs)
+    # In case we rerun before we hit the bottom
+    ss.just_loaded = False
 
 func_name = 'f'
 _default_value = S(0)

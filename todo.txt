@@ -3,7 +3,6 @@ products
 slope equation
 master solve?
 units?
-not transformations, but arbitrary amounts of functions that can interact in specified ways/systems of equations
 query params
 f(x) = sqrt(x), x=x, eq=-1: causes eq box to think x is specified (disables itself)
 find the domain and range of the function

@@ -36,6 +36,7 @@ class SS:
 
     def __init__(self):
         st.session_state['ss'] = self
+        st.session_state['just_loaded'] = True
         self.ensure_exist()
 
     def __setitem__(self, name:str, value):
@@ -209,6 +210,7 @@ class SS:
     def reset_changed(self):
         for var in self.dict.keys():
             st.session_state[var + '_changed'] = False
+        st.session_state['just_loaded'] = False
 
     def get(self, name):
         """ Available just for compatibility """
@@ -230,11 +232,12 @@ class SS:
             # and *not* the default.
             # But we want it to *only* run once, the first time the page loads. Otherwise, we'll be
             # resetting values set the previous run by widgets, which we don't want.
+            # This shouldn't be necissary?...
             if 'just_loaded' not in st.session_state:
                 st.session_state['just_loaded'] = True
+
+            if st.session_state['just_loaded']:
                 for name in st.query_params.to_dict().keys():
                     st.session_state[name] = self._get_query_param(name)
-            else:
-                st.session_state['just_loaded'] = False
 
 ss = SS()
