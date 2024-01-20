@@ -110,7 +110,7 @@ def _sanatizeInput(eq:str, replace_constants=True):
 
 def get_atoms(expr):
     if expr is None: return set()
-    return expr.atoms(Symbol)
+    # return expr.atoms(Symbol)
     # return sorted(list(filter(lambda i: isinstance(i, Symbol), expr.atoms())), reverse=False, key=str)
     def atom_filter(i):
         return (
@@ -118,7 +118,7 @@ def get_atoms(expr):
             str(i) not in ('-', '+', ' ', '')
         )
 
-    atoms = list(filter(atom_filter, expr.atoms()))
+    atoms = set(filter(atom_filter, expr.atoms()))
     # if isinstance(expr, MatrixBase):
         # atoms += [Symbol(f'col_{i}') for i in range(expr.cols)]
     return atoms

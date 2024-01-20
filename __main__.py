@@ -176,9 +176,9 @@ with st.sidebar:
 
 # This shouldn't be necissary. I have no idea why it is. And it's STILL inconsistent
 # This is for toasting units of constants we've replaced
-if (bread := ss.to_toast) is not None and len(bread):
-    for _ in range(len(bread)):
-        st.toast(bread.pop())
+# if (bread := ss.to_toast) is not None and len(bread):
+#     for _ in range(len(bread)):
+#         st.toast(bread.pop())
 
 # ─── The expr boxes ────────────────────────────────────────────────────────────
 unsubbed_exprs = {}
@@ -206,7 +206,7 @@ for i in range(num_funcs):
     # If there's an equals sign in it, stick the right side in the eq box
     raw, equals = detect_equals(raw, i)
     if equals is not None:
-        ss[f'eq{i}'] = equals
+        ss[f'_eq{i}'] = equals
         ss.set_expr[i] = raw
         print('Detected =, rerunning...')
         st.rerun()
@@ -393,8 +393,8 @@ if do_plot:
                 prev.show()
                 st.pyplot(plt)
             except Exception as err:
-                st.warning("Can't plot functions together")
-                st.exception(err)
+                st.warning("Can't plot function[s]")
+                # st.exception(err)
 
     elif not len(ss.vars[plot_num]):
         st.toast(':warning: Can\'t plot 0 variables')
