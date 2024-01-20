@@ -12,12 +12,13 @@ from itertools import repeat
 # Anything here will get preserved between pages, and is ensured to exist properly
 # Defaults are specified here, not in their own boxes
 # Set this up before the local imports, so they're setup by time they get called
-ss.setup('exprs', 'impl_mul', 'do_plot',
+ss.setup('raw_exprs', 'impl_mul', 'do_plot',
     # Used for the code box
     prev_id=-1,
     code={'text': '', 'id': -1},
     solutions={},
     vars={0: {}},
+    raw_exprs={},
     exprs={},
     set_expr={},
     func_intros={0: 'f()'},
@@ -59,6 +60,8 @@ except KeyError:
     #   The raw values in the = ____ boxes
     # ss[f'{var}{i}_var']
     #   The raw values of the variables
+    # ss.raw_exprs
+    #   ONLY used so query params can have access to the raw values
 
     # READ ONLY parsed containers. Any changes will be overwritten
     # ss.vars
@@ -85,10 +88,14 @@ except KeyError:
 
 # If we've just loaded and there's query parameters, load them
 if ss.just_loaded:
-    if ss.exprs is not None:
-        for i, val in ss.exprs.items():
-            ss[f'_expr{i}'] = val
-    ss.num_funcs = max(1, len(ss.exprs))
+    if ss.raw_exprs is not None:
+        for i, val in ss.raw_exprs.items():
+            # It stores these as strings for some reason. SS should fix this eventually
+            ss[f'_expr{i}'] = eval(val)
+    ss.num_funcs = max(1, len(ss.raw_exprs))
+    print(ss.raw_exprs)
+    # If we don't clear this, it re-adds to it later on and doubles every refresh
+    ss.raw_exprs = {}
     # In case we rerun before we hit the bottom
     ss.just_loaded = False
 
@@ -192,6 +199,9 @@ for i in range(num_funcs):
     box_type = st.text_area if use_area_box else st.text_input
     intro = ss.func_intros.get(i) or f'{func_names[i]}()'
     raw = box_type(intro, key=f'_expr{i}', on_change=reset_ui)
+
+    # Put the totally raw values into the raw_exprs so query params can access them
+    ss.raw_exprs[i] = raw
 
     # If there's an equals sign in it, stick the right side in the eq box
     raw, equals = detect_equals(raw, i)

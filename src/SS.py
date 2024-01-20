@@ -9,7 +9,7 @@ import pickle
 # TODO add more documentation
 # TODO add auto-page config options
 # TODO fix query params between switching pages
-# TODO fix just_loaded
+# TODO _get_query_params only evaluates the first the first level of the container
 class SS:
     """ A better streamlit.session_state interface.
         There should only be 1 instance of this class, preferably in the main streamlit file. The
