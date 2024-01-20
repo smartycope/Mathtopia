@@ -1,7 +1,6 @@
 import streamlit as st
 from streamlit_extras.switch_page_button import switch_page
 from src.SS import ss
-# import src.funcs as funcs
 import inspect
 
 
