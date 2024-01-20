@@ -19,15 +19,12 @@ def _solve(expr, i):
     # If there aren't any variables in any of the variable values, we've specified
     # all of them. Don't solve, the solution is the expression, just simply and evaluate it.
     if not len(get_atoms(sum(ss.vars[i].values()))):
-        print('No variables, disabled eq for', i)
         # Make a Symbol that looks like a function call, for when we display it in the solutions box
         fake_func_call = f'f({",".join(map(str, ss.vars[i].values()))})'
         sol = [{Symbol(fake_func_call): expr}]
 
         ss.check_changed()
         # ss['_eq{i}'] = str(expr)
-        print(sol)
-        print(ss.solutions[i])
         if ss[f'disable_eq{i}'] is False or sol != ss.solutions[i]: # or ss[f'_eq{i}_changed']:
             ss[f'disable_eq{i}'] = str(expr)
             ss.solutions[i] = sol

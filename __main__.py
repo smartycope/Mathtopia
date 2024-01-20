@@ -18,20 +18,12 @@ ss.setup(
     solutions={},
     vars={0: {}},
     exprs={},
-    # The raw inputs. The parsed Expr input is exprs or ss[f'_expr{i}']
-    # _exprs={0: ''},
-    # The raw inputs. The parse Expr input is ss[f'eq{i}']
-    # _eqs={0: 0},
     set_expr={},
     func_intros={0: 'f()'},
-    # func_name='f',
     interpret_as_latex=False,
     impl_mul=True,
-    do_template=False,
     do_solve=True,
     do_simplify=True,
-    # Don't handle this here, so it changes with do_simplify
-    # do_it=True if ss.do_simplify is None else ss.do_simplify,
     num_eval=False,
     do_round=3,
     filter_imag=True,
@@ -60,36 +52,36 @@ except KeyError:
 
 
 # An explanation of variables:
-# Raw values. These are also keys to their respective widgets
-# ss[f'_expr{i}']
-#   The raw values in the expression boxes
-# ss[f'_eq{i}']
-#   The raw values in the = ____ boxes
-# ss[f'{var}{i}_set_to']
-#   The raw values of the variables
+    # Raw values. These are also keys to their respective widgets
+    # ss[f'_expr{i}']
+    #   The raw values in the expression boxes
+    # ss[f'_eq{i}']
+    #   The raw values in the = ____ boxes
+    # ss[f'{var}{i}_var']
+    #   The raw values of the variables
 
-# Read only parsed containers
-# ss.vars
-#   A list of dicts of the variables in each expression. Goes {parsed_var: parsed_value}.
-#   Is indexed in the same order the functions are in
-#   ss.vars is READ ONLY. Any changes will be overwritten.
-#   To write to the boxes, use ss[f'{var}{i}_set_to']
-# ss.exprs
-#   A dict of the form {index: parsed_and_subbed_expr}. Is READ ONLY like ss.vars
-#   To write to the expressions, use ss[f'_expr{i}']
-# ss.solutions
-#   A dict of the form {index: solution}
-#   Also READ ONLY
+    # READ ONLY parsed containers. Any changes will be overwritten
+    # ss.vars
+    #   A dict of dicts of the variables in each expression. Goes {index: {parsed_var: parsed_value}}.
+    #   Is indexed in the same order the functions are in
+    #   To write to the boxes, use ss[f'{var}{i}_var']
+    # ss.exprs
+    #   A dict of the form {index: parsed_and_subbed_expr}
+    #   To write to the expressions, use ss[f'_expr{i}']
+    # ss.solutions
+    #   A dict of the form {index: solution}
 
-# Overwriting variables
-# ss.set_expr
-#   A dict of the form {index: raw_expr} that takes priority over the value in ss[f'_expr{i}']
-#   Self-destructs when read
-#// ss.set_eq
-#//   A dict of the form {index: raw_expr} that takes priority over the value in ss[f'_eq{i}']
-#//   Self-destructs when read
+    # Overwriting variables
+    # ss.set_expr
+    #   A dict of the form {index: raw_expr} that takes priority over the value in ss[f'_expr{i}']
+    #   Self-destructs when read
 
-# TODO: print(ss.just_loaded)
+    # Partial Variables. These are localy to this file
+    # unsubbed_exprs = {}
+    #   Dict of parsed expressions that don't have the variable values subsituted yet
+    # var_variables = {}
+    #   Dict of {index: set(Symbols)} of varibles in each expression
+
 func_name = 'f'
 _default_value = S(0)
 ss.note_page(__file__)
@@ -98,7 +90,9 @@ st.set_page_config(layout='wide')
 
 # ─── Sidebar configs ───────────────────────────────────────────────────────────
 with st.sidebar:
-    interval_container = st.container()
+    num_funcs = st.number_input('Number of Functions', 1, len(func_names), key='num_funcs')
+
+    interval_container = st.container(border=True)
     # Set the sidebar interval UI elements
     interval_container.write('Interval')
     left, d = interval_container.columns(2)
@@ -109,32 +103,23 @@ with st.sidebar:
     right_interval = parse(d.text_input(f'var {">" if right_open else "≥"}', value=ss.right_interval, key='right_interval'))
     interval = Interval(left_interval, right_interval, left_open=left_open, right_open=right_open)
 
-    num_funcs = st.number_input('Number of Functions', 1, len(func_names), key='num_funcs')
     impl_mul = st.checkbox('Implicit Multiplication',            value=ss.impl_mul,           key='impl_mul',    help='Allows you to do things like `3x` and `3(x+1) without throwing errors')
     interpret_as_latex = st.checkbox('Interpret input as LaTeX', value=ss.interpret_as_latex, key='interpret_as_latex', help='The expression box will automatically detect LaTeX code for you. Click this to manually tell it that it is LaTeX, in case the detection doesnt work')
-    do_template = st.checkbox('Include a Template Function',     value=ss.do_template,        key='do_template', help='Includes a Template function on which the base function gets called on')
     do_solve = st.checkbox('Solve',                              value=ss.do_solve,           key='do_solve',    help='Whether to solve the equation or not. Helpful if you want to look at things that take a long time to solve, like some integrals.')
     if do_solve:
         do_simplify = st.checkbox('Simplify Solutions',          value=ss.do_simplify,        key='do_simplify', help='This reduces the equation down to its most simple form')
-        do_it = st.checkbox('Evaluate Solutions',                value=ss.do_it,              key='do_it',       help='This is distinct from simplifying the expression. Simplifying will reduce down to, say, an integral, as opposed to actually evaluating (symbolically) the integral.')
+        # This value has to be specified here, so it'll follow do_simplify
+        do_it = st.checkbox('Evaluate Solutions',                value=do_simplify,              key='do_it',       help='This is distinct from simplifying the expression. Simplifying will reduce down to, say, an integral, as opposed to actually evaluating (symbolically) the integral.')
         num_eval = st.checkbox('Give Non-Symbolic Solutions',    value=ss.num_eval,           key='num_eval',    help='Evaluate the function numerically instead of symbolically')
         _do_round = st.empty()
         filter_imag = st.checkbox('Only Inlcude Real Solutions', value=ss.filter_imag,        key='filter_imag', help='Whether we should include answers with `i` in them or not')
     do_plot = st.checkbox('Plot the function',                   value=ss.do_plot,            key='do_plot',     help='Only 1 and 2 unknowns can be plotted')
     if do_plot:
-        tmp = st.selectbox('Which function to plot', func_names[:num_funcs], index=0,  key='plot_num')
-        # Streamlit has a weird return for selectboxes
-        if tmp == 0:
-            plot_num = 0
-        else:
-            plot_num = func_names.index(tmp)
+        plot_num = func_names.index(st.selectbox('Which function to plot', func_names[:num_funcs], index=0,  key='plot_num') or 'f')
     do_code = st.checkbox('Include Custom Code Box',             value=ss.do_code,            key='do_code',     help='Adds a code area where we can run Python & sympy code directly on the expression')
     do_check_point = st.empty()
 
-    if st.button('Reset Variables', key='reset_vars', help='Reset all variables back to their Symbols'):
-        for i in ss.vars.keys():
-            for v in i.keys():
-                ss[f'{v}{i}_set_to'] = str(v)
+    reset_vars = st.button('Reset Variables', key='reset_vars', help='Reset all variables back to their Symbols')
 
     if do_solve and num_eval:
         do_round = _do_round.number_input('Round to:', format='%d', value=3, key='do_round')
@@ -245,17 +230,17 @@ for i in range(num_funcs):
         # Loop through all the variables in this function, and their associated columns
         for col, var in zip(var_cols, var_variables[i]):
             # By default, it's whatever it was before
-            value = ss[f'{var}{i}_set_to']
+            value = ss[f'{var}{i}_var']
 
             # If the the box is empty, be sure to fill it with a default value instead
-            if value in (None, 'None', ''):
+            if value in (None, 'None', '') or reset_vars:
                 value = str(var)
 
             # This loads the variable box with the variable we just determined
-            ss[f'{var}{i}_set_to'] = value
+            ss[f'{var}{i}_var'] = value
 
             # The actual variable box
-            set_to = col.text_input(str(var), key=f'{var}{i}_set_to')
+            set_to = col.text_input(str(var), key=f'{var}{i}_var')
             if not len(set_to):
                 # If it's empty, then rerun. The above if-statement will catch it and fix it.
                 st.rerun()
@@ -264,7 +249,7 @@ for i in range(num_funcs):
             ss.vars[i][var] = parse(set_to)
 
             # So it's preserved across pages
-            ss.watch(f'{var}{i}_set_to', '')
+            ss.watch(f'{var}{i}_var', '')
 
         label_col.markdown('## ) =')
 
