@@ -12,7 +12,7 @@ from itertools import repeat
 # Anything here will get preserved between pages, and is ensured to exist properly
 # Defaults are specified here, not in their own boxes
 # Set this up before the local imports, so they're setup by time they get called
-ss.setup('raw_exprs', 'impl_mul', 'do_plot',
+ss.setup('raw_exprs', 'impl_mul', 'do_plot', 'do_solve',
     # Used for the code box
     prev_id=-1,
     code={'text': '', 'id': -1},
