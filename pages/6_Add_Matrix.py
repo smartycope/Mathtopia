@@ -11,13 +11,15 @@ left, right = st.columns(2)
 cols = right.number_input('Columns', value=3, min_value=1)
 rows = left.number_input('Rows', value=3, min_value=1)
 
-data = st.data_editor(
+left, right = st.columns(2)
+data = left.data_editor(
     # ([['0'] * cols] * rows) if (d := ss.get('data')) is None else d,
     [['0'] * cols] * rows,
     hide_index=True,
     use_container_width=False,
     column_config={str(cnt): st.column_config.TextColumn(default='0', label='') for cnt in range(cols)},
 )
+input_right = right.empty()
 
 # ss['data'] = data
 
@@ -39,6 +41,9 @@ for _x in range(x):
 result = result[:-1]
 result += '])'
 left.code(result)
+
+input_right.latex(latex(parse(result)))
+
 if right.button('Overwrite Main Expression'):
     ss.set_expr[0] = result
     switch_page('main ')

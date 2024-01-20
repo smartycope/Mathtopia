@@ -110,7 +110,9 @@ def show_sympy(expr, to=st):
                 right.write(tmp)
     else:
         if isinstance(expr, MatrixBase):
-            to.dataframe(matrix2numpy(expr), hide_index=True, column_config={str(cnt): to.column_config.TextColumn(default='0', label='') for cnt in range(len(expr))})
+            # _, center, _ = to.columns([.45, .05, .45])
+            # to.dataframe(matrix2numpy(expr), hide_index=True, column_config={str(cnt): to.column_config.TextColumn(default='0', label='') for cnt in range(len(expr))})
+            to.latex(latex(expr))
         else:
             if ss.num_eval:
                 try:

@@ -105,7 +105,7 @@ with st.sidebar:
     right_interval = parse(d.text_input(f'var {">" if right_open else "≥"}', value=ss.right_interval, key='right_interval'))
     interval = Interval(left_interval, right_interval, left_open=left_open, right_open=right_open)
 
-    impl_mul = st.checkbox('Implicit Multiplication',            value=ss.impl_mul,           key='impl_mul',    help='Allows you to do things like `3x` and `3(x+1) without throwing errors')
+    impl_mul = st.checkbox('Implicit Multiplication',            value=ss.impl_mul,           key='impl_mul',    help='Allows you to do things like `3x` and `3(x+1) without throwing errors. Note that calling other functions won\'t work with this enabled.')
     interpret_as_latex = st.checkbox('Interpret input as LaTeX', value=ss.interpret_as_latex, key='interpret_as_latex', help='The expression box will automatically detect LaTeX code for you. Click this to manually tell it that it is LaTeX, in case the detection doesnt work')
     do_solve = st.checkbox('Solve',                              value=ss.do_solve,           key='do_solve',    help='Whether to solve the equation or not. Helpful if you want to look at things that take a long time to solve, like some integrals.')
     if do_solve:
@@ -277,31 +277,37 @@ for i in range(num_funcs):
         ss.watch(f'_eq{i}', '')
 
 # ─── Matrix stuff ──────────────────────────────────────────────────────────────
-if num_funcs == 1 and isinstance(unsubbed_exprs[0], MatrixBase):
-    # This is only relevant if we have a matrix
-    do_check_point = do_check_point.checkbox('Check if a point is within the space of the matrix', key='do_check_point')
+for i, expr in unsubbed_exprs.items():
+    if isinstance(expr, MatrixBase) and do_solve:
+        st.divider()
+        # This is only relevant if we have a matrix, but we also only need to do it once
+        if 'do_check_point' not in ss:
+            do_check_point.checkbox('Check if a point is within the space of the matrix', key='do_check_point')
 
-    # RREF
-    "Row Reduction:"
-    rref, pivots = unsubbed_exprs[0].rref()
-    show_sympy(rref)
-    f"Pivot columns: `{pivots}`"
-
-    if do_check_point:
-        # Check if Point is in Space
-        "Check if Point is in Space:"
-        cols = st.columns(unsubbed_exprs[0].cols-1)
-        for col, i in zip(cols, range(unsubbed_exprs[0].cols-1)):
-            col.text_input(f'col {i}', key=f'{i}_row')
-        m = 'Matrix(['
-        for i in range(unsubbed_exprs[0].cols-1):
-            m += '[' + ss[f'{i}_row'] + '], '
-        m += '])'
-        space, matches = split_matrix(unsubbed_exprs[0])
+        # RREF
+        f"Row Reduction of {func_names[i]}:"
         try:
-            space @ parse(m) == matches
-        except ShapeError as err:
-            st.error(err)
+            rref, pivots = expr.rref()
+        except:
+            st.error("Can't row reduce matrix")
+        f"Pivot columns: `{pivots}`"
+        show_sympy(rref)
+
+        if ss.do_check_point:
+            # Check if Point is in Space
+            "Check if Point is in Space:"
+            cols = st.columns(unsubbed_exprs[0].cols-1)
+            for col, i in zip(cols, range(unsubbed_exprs[0].cols-1)):
+                col.text_input(f'col {i}', key=f'{i}_row')
+            m = 'Matrix(['
+            for i in range(unsubbed_exprs[0].cols-1):
+                m += '[' + ss[f'{i}_row'] + '], '
+            m += '])'
+            space, matches = split_matrix(unsubbed_exprs[0])
+            try:
+                space @ parse(m) == matches
+            except ShapeError as err:
+                st.warning(err)
 
 # Update the session_state expressions
 ss.exprs = {
