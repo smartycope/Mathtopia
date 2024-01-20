@@ -343,7 +343,7 @@ if len(ss._expr0): st.divider()
 # ─── Display the solutions ─────────────────────────────────────────────────────
 for i in range(num_funcs):
     if do_solve and len(ss.vars[i]):
-        with st.expander(f'Solutions for {func_names[i]}', i == 0):
+        with st.expander(f'Solutions for {func_names[i]}', i == 0 and not do_plot):
             solution = _solve(ss.exprs[i], i)
             ss.solutions[i] = solution
             # if len(ss.solutions) <= i:
@@ -379,7 +379,7 @@ if do_plot:
             # st.write("Critical Points:")
             # st.write(dict(zip(map(str, x), y)))
             try:
-                p = plot(expr, show=False, legend=True)
+                p = plot(expr, show=False, legend=not len(expr.atoms(Piecewise)))
                 if prev is None:
                     prev = p
                 else:
@@ -388,8 +388,14 @@ if do_plot:
                 st.warning(f"Can't plot function {func_names[i]}")
             # else:
                 # plt.scatter(x, y)
-        prev.show()
-        st.pyplot(plt)
+        if prev is not None:
+            try:
+                prev.show()
+                st.pyplot(plt)
+            except Exception as err:
+                st.warning("Can't plot functions together")
+                st.exception(err)
+
     elif not len(ss.vars[plot_num]):
         st.toast(':warning: Can\'t plot 0 variables')
     else:
