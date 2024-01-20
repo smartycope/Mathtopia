@@ -24,7 +24,6 @@ def _solve(expr, i):
         sol = [{Symbol(fake_func_call): expr}]
 
         ss.check_changed()
-        # ss['_eq{i}'] = str(expr)
         if ss[f'disable_eq{i}'] is False or sol != ss.solutions[i]: # or ss[f'_eq{i}_changed']:
             ss[f'disable_eq{i}'] = str(expr)
             ss.solutions[i] = sol
@@ -48,15 +47,16 @@ def _solve(expr, i):
         st.toast(f':warning: No solutions exist for function {ss.func_names[i]}')
 
     if ss.do_it:
-        simplified = [k.doit() for k in sol if hasattr(k, 'doit')]
+        simplified = [{k: v.doit() for k, v in j.items()} for j in sol]
         # Don't simplify it if it doesn't give anything.
         # This happens when solving for multiple variables symbolically
         # We want to let the dic stuff below handle that.
         if len(simplified):
             sol = simplified
 
+    # Simplify again, after doing it
     if ss.do_simplify:
-        expr = simplify(expr)
+        simplified = [{k: simplify(v) for k, v in j.items()} for j in sol]
 
     new_sol = []
     # Multivariable problems return dicts
@@ -131,13 +131,19 @@ def caption(expr, vars, interval):
     if len(vars) == 1:
         var = list(vars)[0]
         # Categories
-        d.caption(f'Catagories: `{tuple(categorize(expr, var))}`')
+        try:
+            d.caption(f'Catagories: `{tuple(categorize(expr, var))}`')
+        except: pass
 
-        c.caption('Interval Properties: `' + str(get_interval_desc(expr, var, interval)) + '`')
+        try:
+            c.caption('Interval Properties: `' + str(get_interval_desc(expr, var, interval)) + '`')
+        except: pass
 
         # Min max
-        min, max = min_max(expr, var)
-        b.caption(f'Min: {min}, Max: {max}')
+        try:
+            min, max = min_max(expr, var)
+            b.caption(f'Min: {min}, Max: {max}')
+        except: pass
 
 def reset_ui():
     """ Reset all the vars and the equal box, because we have a new expression provided """
