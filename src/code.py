@@ -1,10 +1,13 @@
 import streamlit as st
 from Cope import RedirectStd, ensure_iterable
-from src.funcs import *
+from pages.Custom_Functions import *
 import io
 from src.helper import show_sympy
 from src.SS import ss
 from src.parse import parse
+from sympy import *
+from Cope.sympy import *
+# from Cope.linalg import *
 # ss = st.session_state.ss
 
 def formatInput2code(s):
@@ -27,8 +30,9 @@ def run_code(code, rtn_tab, output_tab, errors_tab):
         std = io.StringIO()
         err = io.StringIO()
 
+        interval = ss.interval
         _locals = locals()
-        _locals[ss.func_name] = lambda *args: expr.subs(vars)
+        # _locals[ss.func_name] = lambda *args: expr.subs(vars)
         for i in range(ss.num_funcs):
             _locals[f'{ss.func_names[i]}'] = ss.exprs[i]
             _locals[f'{ss.func_names[i]}_vars'] = ss.vars[i]
@@ -41,16 +45,16 @@ def run_code(code, rtn_tab, output_tab, errors_tab):
                 exec(formatInput2code(code), globals(), _locals)
             except Exception as err:
                 errors_tab.exception(err)
+                ss.has_error = True
             else:
+                ss.has_error = False
                 rtn = _locals.get('_rtn')
+                print(rtn)
                 if rtn is not None:
                     if isinstance(rtn, (Dict, dict)):
-                        # rtn_tab.write(rtn)
                         show_sympy(rtn, rtn_tab)
-                        # rtn_tab.
                     else:
                         for i in ensure_iterable(rtn):
-                            # rtn_tab.write(i)
                             show_sympy(i, rtn_tab)
                 output_tab.write(std.read())
                 errors_tab.write(err.read())

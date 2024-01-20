@@ -8,6 +8,10 @@ from sympy.matrices.common import ShapeError
 from sympy.plotting import plot, plot3d
 from src.SS import ss
 from itertools import repeat
+# For debugging
+try:
+    from traceback_with_variables import activate_by_import
+except ImportError: pass
 
 # Anything here will get preserved between pages, and is ensured to exist properly
 # Defaults are specified here, not in their own boxes
@@ -37,9 +41,11 @@ ss.setup('raw_exprs', 'impl_mul', 'do_plot', 'do_solve',
     use_area_box=False,
     left_interval='oo',
     right_interval='oo',
+    interval=Interval(oo, oo),
     num_funcs=1,
     left_open=False,
     right_open=False,
+    has_error=False,
 )
 
 # This handles a very odd error that only comes up every other run
@@ -48,6 +54,8 @@ try:
     from src.code import run_code
     from src.helper import *
     from src.helper import _solve
+    from pages.Custom_Functions import split_matrix, critical_points
+    # from pages.constants import constants
 except KeyError:
     print('Weird error, rerunning')
     st.rerun()
@@ -78,6 +86,8 @@ except KeyError:
     # ss.set_expr
     #   A dict of the form {index: raw_expr} that takes priority over the value in ss[f'_expr{i}']
     #   Self-destructs when read
+    # ss.set_code
+    #   A single string of code to set the code box to. Self-destructs when read
 
     # Partial Variables. These are localy to this file
     # unsubbed_exprs = {}
@@ -91,9 +101,12 @@ if ss.just_loaded:
     if ss.raw_exprs is not None:
         for i, val in ss.raw_exprs.items():
             # It stores these as strings for some reason. SS should fix this eventually
-            ss[f'_expr{i}'] = eval(val)
+            try:
+                ss[f'_expr{i}'] = eval(val)
+            except SyntaxError:
+                ss[f'_expr{i}'] = ''
+
     ss.num_funcs = max(1, len(ss.raw_exprs))
-    print(ss.raw_exprs)
     # If we don't clear this, it re-adds to it later on and doubles every refresh
     ss.raw_exprs = {}
     # In case we rerun before we hit the bottom
@@ -118,7 +131,7 @@ with st.sidebar:
     left, d = interval_container.columns(2)
     left_interval = parse(left.text_input(f'var {"<" if left_open else "≤"}', value=ss.left_interval, key='left_interval'))
     right_interval = parse(d.text_input(f'var {">" if right_open else "≥"}', value=ss.right_interval, key='right_interval'))
-    interval = Interval(left_interval, right_interval, left_open=left_open, right_open=right_open)
+    ss.interval = Interval(left_interval, right_interval, left_open=left_open, right_open=right_open)
 
     impl_mul = st.checkbox('Implicit Multiplication',            value=ss.impl_mul,           key='impl_mul',    help='Allows you to do things like `3x` and `3(x+1) without throwing errors. Note that calling other functions won\'t work with this enabled.')
     interpret_as_latex = st.checkbox('Interpret input as LaTeX', value=ss.interpret_as_latex, key='interpret_as_latex', help='The expression box will automatically detect LaTeX code for you. Click this to manually tell it that it is LaTeX, in case the detection doesnt work')
@@ -193,12 +206,13 @@ for i in range(num_funcs):
         del ss.set_expr[i]
 
     # Put the value we just determined into the box
-    ss[f'_expr{i}'] = _ex
+    # If somehow, we've snuck an evaluated expression in here, make sure it gets cast to a string
+    ss[f'_expr{i}'] = str(_ex)
 
     # Creating the actual box
     box_type = st.text_area if use_area_box else st.text_input
     intro = ss.func_intros.get(i) or f'{func_names[i]}()'
-    raw = box_type(intro, key=f'_expr{i}', on_change=reset_ui)
+    raw = box_type(label=intro, key=f'_expr{i}', on_change=reset_ui)
 
     # Put the totally raw values into the raw_exprs so query params can access them
     ss.raw_exprs[i] = raw
@@ -208,7 +222,6 @@ for i in range(num_funcs):
     if equals is not None:
         ss[f'_eq{i}'] = equals
         ss.set_expr[i] = raw
-        print('Detected =, rerunning...')
         st.rerun()
 
     # Now parse whatever we got, and stick it in exprs so we can do stuff with it later
@@ -235,7 +248,7 @@ for i in range(num_funcs):
     var_variables[i] = v
 
     # Now add captions to each one
-    caption(expr, v, interval)
+    caption(expr, v, ss.interval)
 
     # Show the expression
     show_sympy(expr)
@@ -288,7 +301,6 @@ for i in range(num_funcs):
         label_col.markdown('## ) =')
 
         # The '=' Box
-        print(ss[f'disable_eq{i}'])
         ss[f'_eq{i}'] = ss[f'disable_eq{i}'] or ss[f'_eq{i}'] or '0'
         parse(eq_col.text_input(' ', key=f'_eq{i}', disabled=bool(ss[f'disable_eq{i}']), label_visibility='hidden'))
         # So it's preserved across pages
@@ -430,9 +442,18 @@ if do_plot:
 if do_code:
     left, right = st.columns(2)
     with left:
-        code_tab, output_tab, errors_tab, help_tab = st.tabs(('Code', 'Output', 'Errors', 'Help'))
+        error = 'Errors' if not ss.has_error else "! Error"
+        code_tab, output_tab, errors_tab, help_tab = st.tabs(('Code', 'Output', error, 'Help'))
         with code_tab:
-            resp = code_editor(ss.code['text'], lang='python', key='code')
+            _code = ss.code['text']
+            # Manual priority
+            if 'set_code' in ss:
+                _code = ss.set_code
+                # Change the prev_id so it updates immediately
+                ss.prev_id = -2
+                del ss.set_code
+
+            resp = code_editor(_code, lang='python', key='code', allow_reset=True)
             code = resp['text']
             id = resp['id']
             if id != ss.prev_id:
@@ -442,16 +463,16 @@ if do_code:
         help_tab.markdown('''
             ##### In the code box, you can run sympy expressions directly on the current expression
             The code box accepts valid Python, and has the following variables in scope:
-            - `expr`:Expr
-                - The current expression
-            - `solution`:List[Expr]
-                - The current solutions
-            - `equals`:Expr
-                - The expression the function is set to equal
-            - `vars`:Dict[Symbol: Expr]
-                - All the variables and what they're set to
+            - The name of each function (i.e. f, g, etc.) that is specified. These are expressions though,
+                not functions, so don't try to call them.
+            - func`_solution`:List[Dict[Symbol: Expr]]
+                - The current solutions, prefixed by the function they belong to
+            - func`_equals`:Expr
+                - The expression the function is set to equal, prefixed by the function they belong to
+            - func`_vars`:Dict[Symbol: Expr]
+                - All the variables and what they're set to, prefixed by the function they belong to
             - Everything in the default sympy scope, and sympy.abc
-            - Everything in the pages/funcs.py
+            - Everything in the pages/Custom_functions.py
 
             print() statements should go to the Output tab, but they don't work yet.
 
