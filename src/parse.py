@@ -69,6 +69,12 @@ def detect_equals(s, expr_index) -> ('lhs', 'rhs'):
     else:
         return s, None
 
+def funcify(expr):
+    class f(Function):
+        @classmethod
+        def eval(cls, *args):
+            return expr.subs(dict(zip(get_atoms(expr), args)))
+    return f
 
 def _sanatizeInput(eq:str, replace_constants=True):
     for symbol, replacement in replacements.items():
@@ -103,14 +109,14 @@ def _sanatizeInput(eq:str, replace_constants=True):
     return eq
 
 def get_atoms(expr):
+    if expr is None: return set()
+    return expr.atoms(Symbol)
     # return sorted(list(filter(lambda i: isinstance(i, Symbol), expr.atoms())), reverse=False, key=str)
     def atom_filter(i):
         return (
             isinstance(i, Symbol) and
             str(i) not in ('-', '+', ' ', '')
         )
-    if expr is None:
-        return []
 
     atoms = list(filter(atom_filter, expr.atoms()))
     # if isinstance(expr, MatrixBase):

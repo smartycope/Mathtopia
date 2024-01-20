@@ -41,7 +41,7 @@ def _solve(expr, i):
 
         # Solve for *all* the variables, not just a random one
         sol = []
-        for var in (get_atoms(expr) + get_atoms(eq)):
+        for var in (get_atoms(expr) | get_atoms(eq)):
             sol += solve(Eq(expr, eq), var, dict=True, simplify=ss.do_simplify)
 
     if not len(sol):

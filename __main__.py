@@ -1,6 +1,7 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 from sympy import *
+from sympy.core.function import AppliedUndef
 from Cope import ensure_not_iterable
 from code_editor import code_editor
 from sympy.matrices.common import ShapeError
@@ -42,7 +43,7 @@ ss.setup(
 
 # This handles a very odd error that only comes up every other run
 try:
-    from src.parse import parse, get_atoms, detect_equals
+    from src.parse import *
     from src.code import run_code
     from src.helper import *
     from src.helper import _solve
@@ -79,6 +80,7 @@ except KeyError:
     # Partial Variables. These are localy to this file
     # unsubbed_exprs = {}
     #   Dict of parsed expressions that don't have the variable values subsituted yet
+    #   They're unsubbed, but the functions in them have been resolved.
     # var_variables = {}
     #   Dict of {index: set(Symbols)} of varibles in each expression
 
@@ -189,6 +191,18 @@ for i in range(num_funcs):
 
     # Now parse whatever we got, and stick it in exprs so we can do stuff with it later
     expr = parse(raw, interpret_as_latex)
+
+    if expr is not None:
+        # Now that we have a parsed expression, get all the function calls from it
+        funcs = expr.atoms(AppliedUndef)
+        # Now take those function calls, get the names of them and use their names to get the expression
+        # they're supposed to map to, "funcify" (make a function class out of) the expression, and call
+        # that function with the args it was given in the original expression
+        try:
+            expr = expr.subs({func: funcify(unsubbed_exprs[func_names.index(func.func.__name__)])(*func.args) for func in funcs})
+        except ValueError:
+            st.error("Unknown function called. Please use the proper function names, and make sure they're defined in the right order")
+
     unsubbed_exprs[i] = expr
 
     # Preserve it across pages
