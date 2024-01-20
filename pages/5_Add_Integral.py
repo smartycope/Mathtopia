@@ -15,7 +15,7 @@ _grid.empty()
 to = _grid.text_input('To:')
 _grid.empty()
 _grid.image('assets/integral.png', width=200)
-func = _grid.text_input('Func:', ss._exprs[0])
+func = _grid.text_input('Func:', ss[f'_expr0'])
 var = _grid.text_input('Var:', list(ss.vars[0].keys())[0] if len(ss.vars[0].keys()) == 1 else '')
 _grid.empty()
 from_ = _grid.text_input('From:')
@@ -38,5 +38,5 @@ elif (func is not None and len(func) and var is not None and len(var)):
     show_sympy(parse(result))
 
     if right.button('Overwrite Main Expression'):
-        ss._exprs[0] = result
+        ss.set_expr[0] = result
         switch_page('main ')

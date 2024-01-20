@@ -207,15 +207,15 @@ class SS:
             st.session_state[var] = val
 
     def reset_changed(self):
-        for var in self.__dict__.keys():
+        for var in self.dict.keys():
             st.session_state[var + '_changed'] = False
 
     def get(self, name):
         """ Available just for compatibility """
         return self[name]
 
-    def watch(self, name, default=...):
-        self.__dict__[name] = default if defaults is not Ellipsis else self.default_default
+    def watch(self, name:str, default=...):
+        self.dict[name] = default if default is not Ellipsis else self.default_default
 
     def add_query(self, *names):
         """ Adds variables to be monitored with query parameters as well. Names must already be set

@@ -10,20 +10,27 @@ from src.SS import ss
 
 
 def _solve(expr, i):
-    eq = parse(ss[f'eq{i}']) or S(0)
+    eq = parse(ss[f'_eq{i}']) or S(0)
+
     # If it's a Matrix, don't solve it, main will handle it
     if isinstance(expr, MatrixBase):
         return expr
 
-    # If we've specified all the variables, don't solve, just return the expression verbatim
-    if all(key != val for key, val in ss.vars[i].items()):
+    # If there aren't any variables in any of the variable values, we've specified
+    # all of them. Don't solve, the solution is the expression, just simply and evaluate it.
+    if not len(get_atoms(sum(ss.vars[i].values()))):
+        print('No variables, disabled eq for', i)
         # Make a Symbol that looks like a function call, for when we display it in the solutions box
         fake_func_call = f'f({",".join(map(str, ss.vars[i].values()))})'
         sol = [{Symbol(fake_func_call): expr}]
 
         ss.check_changed()
-        if ss[f'disable_eq{i}'] is False or ss.vars_changed:
+        # ss['_eq{i}'] = str(expr)
+        print(sol)
+        print(ss.solutions[i])
+        if ss[f'disable_eq{i}'] is False or sol != ss.solutions[i]: # or ss[f'_eq{i}_changed']:
             ss[f'disable_eq{i}'] = str(expr)
+            ss.solutions[i] = sol
             # We have to rerun once here (and in the else statement below) so the UI will immediately
             # reflect the change we've made here
             # In addition, we only want to rerun if we've made a change, otherwise we get stuck in an
@@ -127,7 +134,7 @@ def caption(expr, vars, interval):
         # Categories
         d.caption(f'Catagories: `{tuple(categorize(expr, var))}`')
 
-        c.caption('In Interval: `' + str(get_interval_desc(expr, var, interval)) + '`')
+        c.caption('Interval Properties: `' + str(get_interval_desc(expr, var, interval)) + '`')
 
         # Min max
         min, max = min_max(expr, var)

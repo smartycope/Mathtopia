@@ -40,7 +40,7 @@ result = result[:-1]
 result += '])'
 left.code(result)
 if right.button('Overwrite Main Expression'):
-    ss._exprs[0] = result
+    ss.set_expr[0] = result
     switch_page('main ')
 
 # st.dataframe(matrix2numpy(parse(result)), hide_index=False)

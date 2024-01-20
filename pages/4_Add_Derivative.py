@@ -16,7 +16,7 @@ _grid.empty()
 
 _grid.image('assets/divided_by.png', width=200)
 _grid.empty()
-func = _grid.text_input('Func:', ss._exprs[0])
+func = _grid.text_input('Func:', ss[f'_expr0'])
 
 _grid.image('assets/partial_derivative.png', width=100)
 var = _grid.text_input('Var:', list(ss.vars[0].keys())[0] if len(ss.vars[0].keys()) == 1 else '')
@@ -29,5 +29,5 @@ if (func is not None and len(func) and var is not None and len(var)):
     left.code(result)
     show_sympy(parse(result))
     if right.button('Overwrite Main Expression'):
-        ss._exprs[0] = result
+        ss.set_expr[0] = result
         switch_page('main ')

@@ -14,7 +14,6 @@ ss.update(__file__)
 if 'states' not in ss:
     ss['states'] = []
 
-
 op = ow + anyof('<=', '>=', '<', '>', '!=') + ow
 interval = group(chunk, name='a') + group(op, name='op1') + group(chunk, name='b') + group(op, name='op2') + group(chunk, name='c')
 repl = '(' + rgroup('a') + ' ' + rgroup('op1') + ' ' + rgroup('b') + ') & (' + rgroup('b') + ' ' + rgroup('op2') + ' ' + rgroup('c') + ')'
@@ -59,5 +58,5 @@ if len(states):
     show_sympy(parse(result))
 
     if right.button('Overwrite Main Expression'):
-        ss._exprs[0] = result
+        ss.set_expr[0] = result
         switch_page('main ')
