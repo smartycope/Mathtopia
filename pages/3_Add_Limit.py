@@ -3,7 +3,7 @@ from sympy import *
 from streamlit_extras.switch_page_button import switch_page
 from src.parse import parse
 from src.helper import show_sympy
-from src.SS import ss
+from Cope.streamlit import ss
 
 st.set_page_config(layout='centered')
 ss.update(__file__)

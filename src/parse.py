@@ -16,7 +16,7 @@ import ezregex as er
 from pages.Constants import constants
 
 # ss = st.session_state.ss
-from src.SS import ss
+from Cope.streamlit import ss
 
 arrowRegex    = (er.group(er.chunk) + er.ow + '->' + er.ow + er.group(er.chunk)).compile()
 doubleEqRegex = (er.group(er.chunk) + er.ow + '==' + er.ow + er.group(er.chunk)).compile()

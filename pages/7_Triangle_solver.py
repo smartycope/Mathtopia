@@ -4,7 +4,7 @@ import streamlit as st
 from src.parse import parse
 from copy import copy
 from sympy import N
-from src.SS import ss
+from Cope.streamlit import ss
 
 st.set_page_config(layout='wide')
 ss.update(__file__)

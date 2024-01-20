@@ -3,7 +3,7 @@ from Cope import RedirectStd, ensure_iterable
 from pages.Custom_Functions import *
 import io
 from src.helper import show_sympy
-from src.SS import ss
+from Cope.streamlit import ss
 from src.parse import parse
 from sympy import *
 from Cope.sympy import *

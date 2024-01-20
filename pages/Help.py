@@ -1,5 +1,5 @@
 import streamlit as st
-from src.SS import ss
+from Cope.streamlit import ss
 
 st.set_page_config(layout='wide')
 ss.update(__file__)

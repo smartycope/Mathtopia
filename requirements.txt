@@ -1,5 +1,5 @@
 streamlit>=1.30.0
-Cope>=2.2.2
+Cope>=2.3.0
 antlr4-python3-runtime==4.11.0
 streamlit_extras
 streamlit_code_editor

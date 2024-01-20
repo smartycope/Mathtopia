@@ -6,7 +6,7 @@ from Cope import ensure_not_iterable
 from code_editor import code_editor
 from sympy.matrices.common import ShapeError
 from sympy.plotting import plot, plot3d
-from src.SS import ss
+from Cope.streamlit import ss
 from itertools import repeat
 # For debugging
 try:

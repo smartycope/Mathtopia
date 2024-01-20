@@ -6,7 +6,7 @@ import decimal
 from Cope.sympy import *
 from decimal import Decimal as D
 from src.parse import get_atoms, parse
-from src.SS import ss
+from Cope.streamlit import ss
 from pages.Custom_Functions import min_max, get_interval_desc
 
 def _solve(expr, i):
