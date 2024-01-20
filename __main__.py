@@ -117,7 +117,11 @@ with st.sidebar:
         filter_imag = st.checkbox('Only Inlcude Real Solutions', value=ss.filter_imag,        key='filter_imag', help='Whether we should include answers with `i` in them or not')
     do_plot = st.checkbox('Plot the function',                   value=ss.do_plot,            key='do_plot',     help='Only 1 and 2 unknowns can be plotted')
     if do_plot:
-        plot_num = func_names.index(st.selectbox('Which function to plot', func_names[:num_funcs], index=0,  key='plot_num') or 'f')
+        selection = st.selectbox('Which function to plot', ('all',) + func_names[:num_funcs], index=0,  key='plot_num') or 'all'
+        if selection == 'all':
+            plot_num = -1
+        else:
+            plot_num = func_names.index(selection)
     do_code = st.checkbox('Include Custom Code Box',             value=ss.do_code,            key='do_code',     help='Adds a code area where we can run Python & sympy code directly on the expression')
     do_check_point = st.empty()
 
@@ -336,21 +340,45 @@ if num_funcs == 1 and do_solve and len(ss.vars[0]):
 
 # ─── The graph ─────────────────────────────────────────────────────────────────
 if do_plot:
-    if not len(ss.vars[plot_num]):
+    # So it will plot it if we've specified some of the variables
+    def get_num_vars(index):
+        return len(list(filter(lambda k: isinstance(k, Symbol), ss.vars[index].values())))
+
+    # This means plot all that we can on one plot
+    if plot_num == -1:
+        prev = None
+        for i in filter(lambda k: get_num_vars(k) == 1, range(num_funcs)):
+            var = list(ss.vars[i])[0]
+            expr = ss.exprs[i]
+            # x = critical_points(expr, var)
+            # y = [expr.subs({var: i}) for i in x]
+            # st.write("Critical Points:")
+            # st.write(dict(zip(map(str, x), y)))
+            try:
+                p = plot(expr, show=False, legend=True)
+                if prev is None:
+                    prev = p
+                else:
+                    prev.extend(p)
+            except:
+                st.warning(f"Can't plot function {func_names[i]}")
+            # else:
+                # plt.scatter(x, y)
+        prev.show()
+        st.pyplot(plt)
+    elif not len(ss.vars[plot_num]):
         st.toast(':warning: Can\'t plot 0 variables')
     else:
         var = list(ss.vars[plot_num])[0]
         expr = ss.exprs[plot_num]
-        # So it *will* plot it if we've specified some of the variables
-        match len(list(filter(lambda i: isinstance(i, Symbol), ss.vars[plot_num].values()))):
+        match get_num_vars(plot_num):
             case 0:
                 st.toast(':warning: Can\'t plot 0 variables')
             case 1:
                 x = critical_points(expr, var)
                 y = [expr.subs({var: i}) for i in x]
-                st.write("Critical Points:")
-                st.write(dict(zip(map(str, x), y)))
-                print(expr)
+                # st.write("Critical Points:")
+                # st.write(dict(zip(map(str, x), y)))
                 try:
                     plot(expr)
                 except:
