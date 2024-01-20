@@ -85,11 +85,10 @@ except KeyError:
 
 # If we've just loaded and there's query parameters, load them
 if ss.just_loaded:
-    print(ss.exprs)
     if ss.exprs is not None:
         for i, val in ss.exprs.items():
             ss[f'_expr{i}'] = val
-    ss.num_funcs = len(ss.exprs)
+    ss.num_funcs = max(1, len(ss.exprs))
     # In case we rerun before we hit the bottom
     ss.just_loaded = False
 
