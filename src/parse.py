@@ -9,6 +9,7 @@ from sympy.physics.units import *
 from sympy.physics.units.prefixes import Prefix
 from sympy import *
 import re
+from Cope import debug
 import streamlit as st
 from sympy.parsing.latex import parse_latex
 from sympy.parsing import parse_expr
@@ -20,7 +21,8 @@ from Cope.streamlit import ss
 
 arrowRegex    = (er.group(er.chunk) + er.ow + '->' + er.ow + er.group(er.chunk)).compile()
 doubleEqRegex = (er.group(er.chunk) + er.ow + '==' + er.ow + er.group(er.chunk)).compile()
-eqRegex       = (er.group(er.chunk) + er.ow + er.anyCharExcept('<>!=') + '=' + er.anyCharExcept('<>!=') + er.ow + er.group(er.chunk)).compile()
+not_relational = er.anyCharExcept('<>!=')
+# eqRegex       = (er.group(er.chunk + not_relational) + er.ow + '=' + er.ow + er.group(not_relational + er.chunk)).compile()
 
 varTypes = (Symbol, Derivative, Function, Integral)
 funcTypes = (AppliedUndef, UndefinedFunction) #, Function, WildFunction)
@@ -41,9 +43,9 @@ def _detectLatex(s):
 def _sanatizeLatex(latex):
     if latex[-1] == '.':
         latex = latex[:-1]
-    latex = re.sub('\$_', '', latex)
-    latex = re.sub('\$', '', latex)
-    latex = re.sub('\\dfrac', '\\frac', latex)
+    latex = re.sub(r'\$_', '', latex)
+    latex = re.sub(r'\$', '', latex)
+    latex = re.sub(r'\\dfrac', '\\frac', latex)
     latex = re.sub(r'\\displaystyle', '', latex)
     # latex = re.sub(r'\\ ', '', latex)
     latex = re.sub(r'\\ dx', 'dx', latex)
@@ -52,9 +54,11 @@ def _sanatizeLatex(latex):
 def _convertLatex(s):
     return str(parse_latex(_sanatizeLatex(s)))
 
-def detect_equals(s, expr_index) -> ('lhs', 'rhs'):
+def detect_equals(s) -> ('lhs', 'rhs'):
+    # I don't know WHY single = regex keeps failing, but here's a solution
+    s = re.sub(str(er.ifPrecededBy(not_relational) + '=' + er.ifFollowedBy(not_relational)), '==', s)
     # These have the same groups, and shouldn't both be in the same equation (that doesn't make sense)
-    m = re.search(doubleEqRegex, s) or re.search(eqRegex, s)
+    m = re.search(doubleEqRegex, s)# or re.search(eqRegex, s)
     if m is not None:
         # eq = m.group(1)
         # ss['set_expr'] = m.group(1)
@@ -118,7 +122,12 @@ def get_atoms(expr):
             str(i) not in ('-', '+', ' ', '')
         )
 
-    atoms = set(filter(atom_filter, expr.atoms()))
+    atoms = set()
+    if isinstance(expr, (tuple, list, Tuple)):
+        for i in expr:
+            atoms |= set(filter(atom_filter, i.atoms()))
+    else:
+        atoms = set(filter(atom_filter, expr.atoms()))
     # if isinstance(expr, MatrixBase):
         # atoms += [Symbol(f'col_{i}') for i in range(expr.cols)]
     return atoms

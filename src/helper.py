@@ -8,6 +8,7 @@ from decimal import Decimal as D
 from src.parse import get_atoms, parse
 from Cope.streamlit import ss
 from pages.Custom_Functions import min_max, get_interval_desc
+from Cope import debug, flatten
 
 def _solve(expr, i):
     eq = parse(ss[f'_eq{i}']) or S(0)
@@ -16,16 +17,49 @@ def _solve(expr, i):
     if isinstance(expr, MatrixBase):
         return expr
 
-    # If there aren't any variables in any of the variable values, we've specified
-    # all of them. Don't solve, the solution is the expression, just simply and evaluate it.
-    if not len(get_atoms(sum(ss.vars[i].values()))):
-        # Make a Symbol that looks like a function call, for when we display it in the solutions box
-        fake_func_call = f'f({",".join(map(str, ss.vars[i].values()))})'
-        sol = [{Symbol(fake_func_call): expr}]
+    # If there aren't any variables in any of the variable values, we've specified all of them.
+    solvable = bool(len(get_atoms(sum(flatten(ss.vars[i].values())))))
+    if any(map(lambda v: isinstance(v, (tuple, Tuple)), ss.vars[i].values())):
+        solvable = False
+    sol = []
+    if solvable:
+        # Solve for *all* the variables, not just a random one
+        for var in (get_atoms(expr) | get_atoms(eq)):
+            try:
+                sol += solve(Eq(expr, eq), var, dict=True, simplify=ss.do_simplify)
+            except NotImplementedError as err:
+                st.error(err)
+
+        # Nevermind, we tried, and it actually isn't solvable
+        solvable = bool(len(sol))
+
+    dont_change_eq = False
+    # If there's no vars to solve for, or if we've tried and failed to solve it, then the solution
+    # is the expression, just simply and evaluate it.
+    if not solvable:
+        # If we're given a list of values, main will substitute them for us.
+        # Here, we're taking those substitutions, and displaying them as solutions
+        if isinstance(list(ss.vars[i].values())[0], (tuple, Tuple)):
+            dont_change_eq = True
+            for key, vals in ss.vars[i].items():
+                for cnt, val in enumerate(vals):
+                    fake_func_call = f'f({val})'
+                    sol += [{Symbol(fake_func_call): expr[cnt]}]
+        else:
+            # Make a Symbol that looks like a function call, for when we display it in the solutions box
+            fake_func_call = f'f({",".join(map(str, ss.vars[i].values()))})'
+            sol += [{Symbol(fake_func_call): expr}]
 
         ss.check_changed()
-        if ss[f'disable_eq{i}'] is False or sol != ss.solutions[i]: # or ss[f'_eq{i}_changed']:
-            ss[f'disable_eq{i}'] = str(expr)
+        if (
+            # If we failed to get a solution, don't disable the eq box
+            not bool(len(get_atoms(sum(flatten(ss.vars[i].values()))))) and
+            ((ss[f'disable_eq{i}'] is False or sol != ss.solutions[i]))
+            # Don't set the eq box if we're display multiple solutions for multiple inputs.
+            # It makes it break when you change the function and it tries to reparse what left in the
+            # eq box
+        ):
+            ss[f'disable_eq{i}'] = '' if dont_change_eq else str(expr)
             ss.solutions[i] = sol
             # We have to rerun once here (and in the else statement below) so the UI will immediately
             # reflect the change we've made here
@@ -38,46 +72,62 @@ def _solve(expr, i):
             ss[f'disable_eq{i}'] = False
             st.rerun()
 
-        # Solve for *all* the variables, not just a random one
-        sol = []
-        for var in (get_atoms(expr) | get_atoms(eq)):
-            sol += solve(Eq(expr, eq), var, dict=True, simplify=ss.do_simplify)
-
     if not len(sol):
         st.toast(f':warning: No solutions exist for function {ss.func_names[i]}')
 
-    if ss.do_it:
-        simplified = [{k: v.doit() for k, v in j.items()} for j in sol]
-        # Don't simplify it if it doesn't give anything.
-        # This happens when solving for multiple variables symbolically
-        # We want to let the dic stuff below handle that.
-        if len(simplified):
-            sol = simplified
-
-    # Simplify again, after doing it
-    if ss.do_simplify:
-        simplified = [{k: simplify(v) for k, v in j.items()} for j in sol]
-
     new_sol = []
-    # Multivariable problems return dicts
-    # I had all this in ONE LINE if I didn't need a try except statement there
     for s in sol:
-        if isinstance(s, (Dict, dict)):
+        new_d = {}
+        for k, v in s.items():
+            if ss.do_it:
+                v = v.doit()
+            if ss.do_simplify:
+                v = simplify(v)
             if ss.num_eval:
                 try:
-                    new_sol.append({key: round(N(val), ss.do_round) for key, val in s.items()})
-                except TypeError as err:
-                    new_sol.append({key: N(val) for key, val in s.items()})
-            else:
-                new_sol.append(s)
-        else:
-            if ss.num_eval:
-                try:
-                    new_sol.append(round(N(s), ss.do_round))
-                except TypeError as err:
-                    new_sol.append(N(s))
-            else:
-                new_sol.append(s)
+                    v = round(N(v), ss.do_round)
+                except TypeError:
+                    v = N(v)
+
+            new_d[k] = v
+        new_sol.append(new_d)
+    sol = new_sol
+
+
+    # if ss.do_it:
+    #     done = [{k: v.doit() for k, v in j.items()} for j in sol]
+    #     # Don't simplify it if it doesn't give anything.
+    #     # This happens when solving for multiple variables symbolically
+    #     # We want to let the dic stuff below handle that.
+    #     if len(done):
+    #         sol = done
+
+    # # Simplify again, after doing it
+    # if ss.do_simplify:
+    #     sol = [{k: simplify(v) for k, v in j.items()} for j in sol]
+
+    # if ss.num_eval:
+    #     sol = [{k: round(N(v), ss.do_round) for k, v in j.items()} for j in sol]
+
+    # new_sol = []
+    # I had all this in ONE LINE if I didn't need a try except statement there
+    # for s in sol:
+    #     if isinstance(s, (Dict, dict)):
+    #         if ss.num_eval:
+    #             try:
+    #                 new_sol.append({key: round(N(val), ss.do_round) for key, val in s.items()})
+    #             except TypeError as err:
+    #                 new_sol.append({key: N(val) for key, val in s.items()})
+    #         else:
+    #             new_sol.append(s)
+    #     else:
+    #         if ss.num_eval:
+    #             try:
+    #                 new_sol.append(round(N(s), ss.do_round))
+    #             except TypeError as err:
+    #                 new_sol.append(N(s))
+    #         else:
+    #             new_sol.append(s)
 
     if ss.filter_imag:
         real = list(filter(lambda k: I not in (k.atoms() if not isinstance(k, (Dict, dict)) else list(k.values())[0].atoms()), sol))

@@ -7,3 +7,7 @@ add assumtions to variables you specify https://docs.sympy.org/latest/guides/ass
 move SS to Cope
 custom code printing doesn't work
 The ! in !Errors is delayed
+log(x, 12) often doesn't work when solving, but log(x)/log(12) does. Auto Parse?
+min and max are kind of annoying and not that useful. have only as a custom function?
+are the interval boxes backwards?
+log2(x−5)+log2(x+10)=4 doens't set the eq box properly? -- I think it's failing when it just came from being disabled

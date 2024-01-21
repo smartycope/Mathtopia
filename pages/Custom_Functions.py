@@ -52,24 +52,25 @@ def remove_typing(signature:inspect.Signature) -> str:
 
 def display(new_vars='', var=True, expr=True):
     def inner(func):
-        st.write('#### ' + func.__name__)
-        if (doc := inspect.getdoc(func)):
-            st.caption(doc)
-        sig = inspect.signature(func)
-        if st.button(func.__name__ + str(sig)):
-            code = ''
-            if len(new_vars):
-                code += new_vars + '\n'
-            if expr:
-                code += 'expr = f\n'
-            if var:
-                code += 'var = list(f_vars)[0]\n'
-            if len(code):
-                code += '\n'
+        if not ss.just_loaded:
+            st.write('#### ' + func.__name__)
+            if (doc := inspect.getdoc(func)):
+                st.caption(doc)
+            sig = inspect.signature(func)
+            if st.button(func.__name__ + str(sig)):
+                code = ''
+                if len(new_vars):
+                    code += new_vars + '\n'
+                if expr:
+                    code += 'expr = f\n'
+                if var:
+                    code += 'var = list(f_vars)[0]\n'
+                if len(code):
+                    code += '\n'
 
-            ss.set_code = code + func.__name__ + remove_typing(sig)
-            ss.do_code = True
-            switch_page('main ')
+                ss.set_code = code + func.__name__ + remove_typing(sig)
+                ss.do_code = True
+                switch_page('main ')
 
         return func
     return inner

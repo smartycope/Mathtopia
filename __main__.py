@@ -7,11 +7,13 @@ from code_editor import code_editor
 from sympy.matrices.common import ShapeError
 from sympy.plotting import plot, plot3d
 from Cope.streamlit import ss
+from Cope import debug, ensure_not_iterable, ensure_iterable
 from itertools import repeat
 # For debugging
 try:
     from traceback_with_variables import activate_by_import
 except ImportError: pass
+from sympy import Tuple
 
 # Anything here will get preserved between pages, and is ensured to exist properly
 # Defaults are specified here, not in their own boxes
@@ -218,7 +220,7 @@ for i in range(num_funcs):
     ss.raw_exprs[i] = raw
 
     # If there's an equals sign in it, stick the right side in the eq box
-    raw, equals = detect_equals(raw, i)
+    raw, equals = detect_equals(raw)
     if equals is not None:
         ss[f'_eq{i}'] = equals
         ss.set_expr[i] = raw
@@ -260,7 +262,7 @@ for i in range(num_funcs):
         ss.func_intros[i] = intro
         st.rerun()
 
-if len(ss._expr0): st.divider()
+if len(ss._expr0) and len(ss.vars[0]): st.divider()
 
 # ─── The f(inputs) box ─────────────────────────────────────────────────────────
 for i in range(num_funcs):
@@ -339,11 +341,18 @@ for i, expr in unsubbed_exprs.items():
             except ShapeError as err:
                 st.warning(err)
 
+
 # Update the session_state expressions
-ss.exprs = {
-    i: (expr.subs(ss.vars[i]) if expr is not None else _default_value)
-    for i, expr in unsubbed_exprs.items()
-}
+for i, expr in unsubbed_exprs.items():
+    # If the value it has is a tuple
+    if len(ss.vars[i]) == 1 and isinstance(list(ss.vars[i].values())[0], (tuple, Tuple)):
+        # var, vals = ss.vars[i].items()
+        # var = list(ss.vars[i].keys())
+        # vals = list(ss.vars[i].values())
+        for var, vals in ss.vars[i].items():
+            ss.exprs[i] = [(expr.subs(var, val) if expr is not None else _default_value) for val in ensure_iterable(vals)]
+    else:
+        ss.exprs[i] = expr.subs(ss.vars[i]) if expr is not None else _default_value
 
 # Update the copy boxes
 copy_expression.code(str(ss.exprs[0]))
@@ -354,25 +363,38 @@ if len(ss._expr0): st.divider()
 
 # ─── Display the solutions ─────────────────────────────────────────────────────
 for i in range(num_funcs):
-    if do_solve and len(ss.vars[i]):
+    if do_solve:
         with st.expander(f'Solutions for {func_names[i]}', i == 0 and not do_plot):
-            solution = _solve(ss.exprs[i], i)
-            ss.solutions[i] = solution
-            # if len(ss.solutions) <= i:
-            #     ss.solutions.append(solution)
-            # else:
-            #     ss.solutions[i] = solution
-            for k in solution:
-                show_sympy(k)
-                # Don't add the extra divider at the bottom
-                if k != solution[-1]:
-                    st.divider()
+            if len(ss.vars[i]):
+                solution = _solve(ss.exprs[i], i)
+                ss.solutions[i] = solution
+                # if len(ss.solutions) <= i:
+                #     ss.solutions.append(solution)
+                # else:
+                #     ss.solutions[i] = solution
+                for k in solution:
+                    show_sympy(k)
+                    # Don't add the extra divider at the bottom
+                    if k != solution[-1]:
+                        st.divider()
+            # If there's no variables, manually apply simplify, evaluate, and non-symbolic to it
+            else:
+                expr = ss.exprs[i]
+                if do_it:
+                    expr = expr.doit()
+                if do_simplify:
+                    expr = simplify(expr)
+                if num_eval:
+                    debug('evaling')
+                    expr = expr.evalf()
+                show_sympy(expr)
 
 # ─── Update the Copy Boxes ─────────────────────────────────────────────────────
-if num_funcs == 1 and do_solve and len(ss.vars[0]):
-    copy_solution.code(str(ensure_not_iterable(ss.solutions[0])))
-    copy_solution_latex.code(latex(ensure_not_iterable(ss.solutions[0])))
-    copy_solution_repr.code(srepr(ensure_not_iterable(ss.solutions[0])))
+if num_funcs == 1 and do_solve and len(ss.vars[0]) == 1 and len(ss.solutions[0]):
+    sol = list(ss.solutions[0][0].values())[0]
+    copy_solution.code(str(sol))
+    copy_solution_latex.code(latex(sol))
+    copy_solution_repr.code(srepr(sol))
 
 # ─── The graph ─────────────────────────────────────────────────────────────────
 if do_plot:
@@ -452,7 +474,6 @@ if do_code:
                 # Change the prev_id so it updates immediately
                 ss.prev_id = -2
                 del ss.set_code
-
             resp = code_editor(_code, lang='python', key='code', allow_reset=True)
             code = resp['text']
             id = resp['id']
@@ -465,7 +486,7 @@ if do_code:
             The code box accepts valid Python, and has the following variables in scope:
             - The name of each function (i.e. f, g, etc.) that is specified. These are expressions though,
                 not functions, so don't try to call them.
-            - func`_solution`:List[Dict[Symbol: Expr]]
+            - func`_solutions`:List[Dict[Symbol: Expr]]
                 - The current solutions, prefixed by the function they belong to
             - func`_equals`:Expr
                 - The expression the function is set to equal, prefixed by the function they belong to
