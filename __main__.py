@@ -113,12 +113,13 @@ if ss.just_loaded:
     ss.raw_exprs = {}
     # In case we rerun before we hit the bottom
     ss.just_loaded = False
+else:
+    st.set_page_config(layout='wide')
 
 func_name = 'f'
 _default_value = S(0)
 ss.note_page(__file__)
 ss.func_names = func_names = ('f', 'g', 'h', 'j', 'k', 'l', 'm', 'n', 'o', 'p')
-st.set_page_config(layout='wide')
 
 # ─── Sidebar configs ───────────────────────────────────────────────────────────
 with st.sidebar:
