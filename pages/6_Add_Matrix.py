@@ -7,17 +7,18 @@ from Cope.streamlit import ss
 st.set_page_config(layout='centered')
 ss.update(__file__)
 
-left, right = st.columns(2)
-cols = right.number_input('Columns', value=3, min_value=1)
-rows = left.number_input('Rows', value=3, min_value=1)
+# left, right = st.columns(2)
+cols = st.number_input('Columns', value=3, min_value=1)
+# rows = left.number_input('Rows', value=3, min_value=1)
 
 left, right = st.columns(2)
 data = left.data_editor(
     # ([['0'] * cols] * rows) if (d := ss.get('data')) is None else d,
-    [['0'] * cols] * rows,
+    [['0'] * cols] * 3,
     hide_index=True,
     use_container_width=False,
     column_config={str(cnt): st.column_config.TextColumn(default='0', label='') for cnt in range(cols)},
+    num_rows='dynamic',
 )
 input_right = right.empty()
 

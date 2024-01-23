@@ -365,6 +365,10 @@ if len(ss._expr0): st.divider()
 for i in range(num_funcs):
     if do_solve:
         with st.expander(f'Solutions for {func_names[i]}', i == 0 and not do_plot):
+            # Don't show matricies, we handle them seperately
+            if isinstance(ss.exprs[i], MatrixBase):
+                continue
+
             if len(ss.vars[i]):
                 solution = _solve(ss.exprs[i], i)
                 ss.solutions[i] = solution
@@ -377,17 +381,17 @@ for i in range(num_funcs):
                     # Don't add the extra divider at the bottom
                     if k != solution[-1]:
                         st.divider()
-            # If there's no variables, manually apply simplify, evaluate, and non-symbolic to it
+            # If there's no variables, manually apply simplify, evaluate, and evalf it
             else:
-                expr = ss.exprs[i]
-                if do_it:
-                    expr = expr.doit()
-                if do_simplify:
-                    expr = simplify(expr)
-                if num_eval:
-                    debug('evaling')
-                    expr = expr.evalf()
-                show_sympy(expr)
+                if not isinstance(k, MatrixBase):
+                    expr = ss.exprs[i]
+                    if do_it:
+                        expr = expr.doit()
+                    if do_simplify:
+                        expr = simplify(expr)
+                    if num_eval:
+                        expr = expr.evalf()
+                    show_sympy(expr)
 
 # ─── Update the Copy Boxes ─────────────────────────────────────────────────────
 if num_funcs == 1 and do_solve and len(ss.vars[0]) == 1 and len(ss.solutions[0]):
@@ -405,14 +409,12 @@ if do_plot:
     # This means plot all that we can on one plot
     if plot_num == -1:
         prev = None
+        # Plot the functions with 1 unknown
         for i in filter(lambda k: get_num_vars(k) == 1, range(num_funcs)):
             var = list(ss.vars[i])[0]
             expr = ss.exprs[i]
-            # x = critical_points(expr, var)
-            # y = [expr.subs({var: i}) for i in x]
-            # st.write("Critical Points:")
-            # st.write(dict(zip(map(str, x), y)))
             try:
+                # Piecewise functions fail to display in matplotlib, apparently
                 p = plot(expr, show=False, legend=not len(expr.atoms(Piecewise)))
                 if prev is None:
                     prev = p
@@ -420,24 +422,69 @@ if do_plot:
                     prev.extend(p)
             except:
                 st.warning(f"Can't plot function {func_names[i]}")
-            # else:
-                # plt.scatter(x, y)
+
+        # Plot the functions with 0 unknowns, but which do have a variable, and just scatter the specified variable
+        for i in filter(lambda k: get_num_vars(k) == 0, range(num_funcs)):
+            # If we don't have any variables, just plot the function basically, and
+            # put the specified vars on the plot
+            if len(ss.vars[i]):
+                expr = unsubbed_exprs[i]
+                try:
+                    # Piecewise functions fail to display in matplotlib, apparently
+                    p = plot(expr, show=False, legend=not len(expr.atoms(Piecewise)))
+                    if prev is None:
+                        prev = p
+                    else:
+                        prev.extend(p)
+                except:
+                    st.warning(f"Can't plot function {func_names[i]}")
+                else:
+                    x = only_value(ss.vars[i])
+                    # If there's multiple values specified, plot all of them
+                    if isinstance(x, (tuple, Tuple)):
+                        y = [expr.subs({only_key(ss.vars[i]): j}) for j in x]
+                    else:
+                        y = [expr.subs(ss.vars[i])]
+                        x = [x]
+                    plt.scatter(x, y)
+                    # prev.extend(p)
+                    # debug(p[0])
+
         if prev is not None:
             try:
                 prev.show()
                 st.pyplot(plt)
             except Exception as err:
                 st.warning("Can't plot function[s]")
-                # st.exception(err)
-
-    elif not len(ss.vars[plot_num]):
-        st.toast(':warning: Can\'t plot 0 variables')
+    # Do one plot at a time
     else:
-        var = list(ss.vars[plot_num])[0]
+        # We won't need this if this is true
+        if len(ss.vars[plot_num]):
+            var = list(ss.vars[plot_num])[0]
         expr = ss.exprs[plot_num]
+
         match get_num_vars(plot_num):
             case 0:
-                st.toast(':warning: Can\'t plot 0 variables')
+                # If we don't have any variables, just plot the function basically, and
+                # put the specified vars on the plot
+                if len(ss.vars[plot_num]):
+                    expr = unsubbed_exprs[plot_num]
+                    try:
+                        plot(expr)
+                    except:
+                        st.warning(f"Can't plot function {func_names[plot_num]}")
+                    else:
+                        x = only_value(ss.vars[plot_num])
+                        # If there's multiple values specified, plot all of them
+                        if isinstance(x, (tuple, Tuple)):
+                            y = [expr.subs({only_key(ss.vars[plot_num]): i}) for i in x]
+                        else:
+                            y = [expr.subs(ss.vars[plot_num])]
+                            x = [x]
+                        plt.scatter(x, y)
+                        st.pyplot(plt)
+                else:
+                    st.toast(':warning: Can\'t plot 0 variables')
             case 1:
                 x = critical_points(expr, var)
                 y = [expr.subs({var: i}) for i in x]

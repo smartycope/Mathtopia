@@ -11,3 +11,6 @@ log(x, 12) often doesn't work when solving, but log(x)/log(12) does. Auto Parse?
 min and max are kind of annoying and not that useful. have only as a custom function?
 are the interval boxes backwards?
 log2(x−5)+log2(x+10)=4 doens't set the eq box properly? -- I think it's failing when it just came from being disabled
+it doesn't plot if there's multiple vars in a var box (tuple)
+add limiting the graph to the provided interval
+if they specify variables manually, plot them on a scatter plot

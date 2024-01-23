@@ -201,3 +201,9 @@ def reset_ui():
         ss['vars'] = {}
         ss['eq'] = '0'
         ss['disable_eq'] = False
+
+def only_value(d):
+    return list(d.values())[0]
+
+def only_key(d):
+    return list(d.keys())[0]
