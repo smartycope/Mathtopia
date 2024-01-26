@@ -3,7 +3,6 @@ from streamlit_extras.switch_page_button import switch_page
 from Cope.streamlit import ss
 import inspect
 
-
 from Cope import *
 import sympy as sym
 import math

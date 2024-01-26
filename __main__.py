@@ -53,6 +53,7 @@ ss.setup('raw_exprs', 'impl_mul', 'do_plot', 'do_solve',
 # This handles a very odd error that only comes up every other run
 try:
     from src.parse import *
+    from src.parse import _detectLatex
     from src.code import run_code
     from src.helper import *
     from src.helper import _solve
@@ -223,11 +224,12 @@ for i in range(num_funcs):
     ss.raw_exprs[i] = raw
 
     # If there's an equals sign in it, stick the right side in the eq box
-    raw, equals = detect_equals(raw)
-    if equals is not None:
-        ss[f'_eq{i}'] = equals
-        ss.set_expr[i] = raw
-        st.rerun()
+    if not _detectLatex(raw):
+        raw, equals = detect_equals(raw)
+        if equals is not None:
+            ss[f'_eq{i}'] = equals
+            ss.set_expr[i] = raw
+            st.rerun()
 
     # Now parse whatever we got, and stick it in exprs so we can do stuff with it later
     expr = parse(raw, interpret_as_latex)

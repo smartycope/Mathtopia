@@ -14,3 +14,4 @@ log2(x−5)+log2(x+10)=4 doens't set the eq box properly? -- I think it's failin
 it doesn't plot if there's multiple vars in a var box (tuple)
 add limiting the graph to the provided interval
 if they specify variables manually, plot them on a scatter plot
+annotations on the graph

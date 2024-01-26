@@ -22,8 +22,6 @@ data = left.data_editor(
 )
 input_right = right.empty()
 
-# ss['data'] = data
-
 parsed = []
 for cnt, col in enumerate(data):
     parsed.append([])
