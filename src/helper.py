@@ -9,6 +9,9 @@ from src.parse import get_atoms, parse
 from Cope.streamlit import ss
 from pages.Custom_Functions import min_max, get_interval_desc
 from Cope import debug, flatten
+from sympy.plotting.plot import Plot
+import matplotlib.pyplot as plt
+
 
 def _solve(expr, i):
     eq = parse(ss[f'_eq{i}']) or S(0)
@@ -158,19 +161,18 @@ def show_sympy(expr, to=st):
                     right.write(tmp)
             else:
                 right.write(tmp)
+    elif isinstance(expr, MatrixBase):
+        to.latex(latex(expr))
+    elif isinstance(expr, Plot):
+        to.pyplot(plt)
     else:
-        if isinstance(expr, MatrixBase):
-            # _, center, _ = to.columns([.45, .05, .45])
-            # to.dataframe(matrix2numpy(expr), hide_index=True, column_config={str(cnt): to.column_config.TextColumn(default='0', label='') for cnt in range(len(expr))})
-            to.latex(latex(expr))
-        else:
-            if ss.num_eval:
-                try:
-                    to.write(round(expr, ss.do_round))
-                except:
-                    to.write(expr)
-            else:
+        if ss.num_eval:
+            try:
+                to.write(round(expr, ss.do_round))
+            except:
                 to.write(expr)
+        else:
+            to.write(expr)
 
 def caption(expr, vars, interval):
     if expr is None: return

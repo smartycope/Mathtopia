@@ -31,6 +31,7 @@ ss.setup('raw_exprs', 'impl_mul', 'do_plot', 'do_solve',
     interpret_as_latex=False,
     impl_mul=True,
     do_solve=True,
+    do_stats=False,
     do_simplify=True,
     num_eval=False,
     do_round=3,
@@ -141,6 +142,7 @@ with st.sidebar:
 
     impl_mul = st.checkbox('Implicit Multiplication',            value=ss.impl_mul,           key='impl_mul',    help='Allows you to do things like `3x` and `3(x+1) without throwing errors. Note that calling other functions won\'t work with this enabled.')
     interpret_as_latex = st.checkbox('Interpret input as LaTeX', value=ss.interpret_as_latex, key='interpret_as_latex', help='The expression box will automatically detect LaTeX code for you. Click this to manually tell it that it is LaTeX, in case the detection doesnt work')
+    do_stats = st.checkbox('Stats mode',                         value=ss.do_stats,           key='do_stats',    help='Interpret f() as a CDF, or PMF if it\'s a piecewise function. `X` is assumed to be the random variable')
     do_solve = st.checkbox('Solve',                              value=ss.do_solve,           key='do_solve',    help='Whether to solve the equation or not. Helpful if you want to look at things that take a long time to solve, like some integrals.')
     if do_solve:
         do_simplify = st.checkbox('Simplify Solutions',          value=ss.do_simplify,        key='do_simplify', help='This reduces the equation down to its most simple form')
@@ -277,8 +279,12 @@ for i in range(num_funcs):
         col_alignments = [.08] + ([.7/len(var_variables[i])]*len(var_variables[i])) + [.15, .2]
         func_col, *var_cols, label_col, eq_col = st.columns(col_alignments)
 
+        # The P( part
+        if do_stats:
+            func_col.markdown(f'## P(')
         # The f( part
-        func_col.markdown(f'## {func_names[i]}(')
+        else:
+            func_col.markdown(f'## {func_names[i]}(')
 
         # Second, all the variable boxes
         # Loop through all the variables in this function, and their associated columns
@@ -366,8 +372,27 @@ copy_expression_repr.code(srepr(ss.exprs[0]))
 
 if len(ss._expr0): st.divider()
 
-# ─── Display the solutions ─────────────────────────────────────────────────────
+# ─── Display the solutions/probabilities ────────────────────────────────────────
 for i in range(num_funcs):
+    if do_stats:
+        with st.expander(f'Probability for {func_names[i]}', i == 0 and not do_plot):
+            # If it's a matrix, ignore it, that doesn't make any sense
+            if isinstance(ss.exprs[i], MatrixBase):
+                continue
+
+            if len(ss.vars[i]):
+                solution = _solve(ss.exprs[i], i)
+                ss.solutions[i] = solution
+                # if len(ss.solutions) <= i:
+                #     ss.solutions.append(solution)
+                # else:
+                #     ss.solutions[i] = solution
+                for k in solution:
+                    show_sympy(k)
+                    # Don't add the extra divider at the bottom
+                    if k != solution[-1]:
+                        st.divider()
+
     if do_solve:
         with st.expander(f'Solutions for {func_names[i]}', i == 0 and not do_plot):
             # Don't show matricies, we handle them seperately
@@ -411,6 +436,17 @@ if do_plot:
     def get_num_vars(index):
         return len(list(filter(lambda k: isinstance(k, Symbol), ss.vars[index].values())))
 
+    def show_plot():
+        try:
+            ss.plt = plt
+            # Add the interval to the plot
+            if ss.interval != EmptySet and not (ss.interval.start == ss.interval.end == oo):
+                plt.axvline(x=ss.interval.start)
+                plt.axvline(x=ss.interval.end)
+            st.pyplot(plt)
+        except Exception as err:
+            print(err)
+
     # This means plot all that we can on one plot
     if plot_num == -1:
         prev = None
@@ -451,6 +487,7 @@ if do_plot:
                     else:
                         y = [expr.subs(ss.vars[i])]
                         x = [x]
+                    # TODO: This doesn't work. Figure out how to add
                     plt.scatter(x, y)
                     # prev.extend(p)
                     # debug(p[0])
@@ -458,7 +495,7 @@ if do_plot:
         if prev is not None:
             try:
                 prev.show()
-                st.pyplot(plt)
+                show_plot()
             except Exception as err:
                 st.warning("Can't plot function[s]")
     # Do one plot at a time
@@ -487,7 +524,7 @@ if do_plot:
                             y = [expr.subs(ss.vars[plot_num])]
                             x = [x]
                         plt.scatter(x, y)
-                        st.pyplot(plt)
+                        show_plot()
                 else:
                     st.toast(':warning: Can\'t plot 0 variables')
             case 1:
@@ -501,14 +538,14 @@ if do_plot:
                     st.warning(f"Can't plot function {func_names[plot_num]}")
                 else:
                     plt.scatter(x, y)
-                    st.pyplot(plt)
+                    show_plot()
             case 2:
                 try:
                     plot3d(expr)
                 except:
                     st.warning(f"Can't plot function {func_names[plot_num]}")
                 else:
-                    st.pyplot(plt)
+                    show_plot()
             case _:
                 st.toast(':warning: Can\'t plot more than 2 variables')
 

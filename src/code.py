@@ -10,6 +10,9 @@ from Cope.sympy import *
 # from Cope.linalg import *
 # ss = st.session_state.ss
 from Cope import debug
+from sympy.plotting.plot import Plot
+import matplotlib.pyplot as plt
+
 
 def formatInput2code(s):
     # keywords = set(dir(builtins) + dir(er) + re.findall((lineStart + group(word) + ifFollowedBy(ow + '=')).str(), s))
@@ -26,12 +29,12 @@ def formatInput2code(s):
     lines.append('\n_rtn = '  + lines.pop(-1))
     return '\n'.join(lines)
 
-
 def run_code(code, rtn_tab, output_tab, errors_tab):
     std = io.StringIO()
     err = io.StringIO()
 
     interval = ss.interval
+    plt = ss.plt
     _locals = locals()
     # _locals[ss.func_name] = lambda *args: expr.subs(vars)
     for i in range(ss.num_funcs):

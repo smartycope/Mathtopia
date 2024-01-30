@@ -110,6 +110,10 @@ def _sanatizeInput(eq:str, replace_constants=True):
 
     # eq = re.sub((match('e') + optional(ifPrecededBy(digit())) + ifNotFollowedBy(anyAlphaNum()) + ifNotPrecededBy(alpha())).str(), 'E', eq)
 
+     # Replace ! with factorial()
+    factorial_re = (er.group(er.word) + '!').str()
+    eq = re.sub(factorial_re, str(er.replace('factorial({1})')), eq)
+
     return eq
 
 def get_atoms(expr):
