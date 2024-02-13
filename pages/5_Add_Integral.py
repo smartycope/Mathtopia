@@ -20,21 +20,29 @@ var = _grid.text_input('Var:', list(ss.vars[0].keys())[0] if len(ss.vars[0].keys
 _grid.empty()
 from_ = _grid.text_input('From:')
 
+order = st.columns(2)[0].number_input('Order', 1, value=1, step=1)
+
 if (bool(len(to)) ^ bool(len(from_))) and (func is not None and len(func) and var is not None and len(var)):
     st.warning('Please specify `to` and `from` or neither (don\'t just specify one)')
 elif (func is not None and len(func) and var is not None and len(var)):
     st.divider()
     label = st.empty()
     left, right = st.columns([.8, .2])
+    result = f'Integral({func}, '
     if len(to):
         label.write("Definite Integral:")
-        result = f'Integral({func}, ({var}, {from_}, {to}))'
-        left.code(result)
+        new = f'({var}, {from_}, {to})'
     else:
         label.write("Indefinite Integral:")
-        result = f'Integral({func}, {var})'
-        left.code(result)
+        new = str(var)
 
+    if order != 1:
+        result += ', '.join([str(new)]*order)
+    else:
+        result += new
+    result += ')'
+
+    left.code(result)
     show_sympy(parse(result))
 
     if right.button('Overwrite Main Expression'):
