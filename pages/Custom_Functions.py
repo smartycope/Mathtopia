@@ -75,8 +75,13 @@ def display(new_vars='', var=True, expr=True):
     return inner
 
 
-with st.expander('Calculus'):
+with st.expander('Algebra'):
+    @display('y1 = interval.start\ny2 = interval.end')
+    def get_slope_at_point(expr, var, y1, y2):
+        return (y2-y1)/(expr.subs(var, y2) - expr.subs(var, y1))
 
+
+with st.expander('Calculus'):
     display('unknown = list(f_vars)[0]', var=False)(Cope.sympy.categorize)
 
     @display()
@@ -254,7 +259,7 @@ with st.expander('Calculus'):
 
 
     @confidence(80)
-    @display()
+    @display('val = interval.start')
     def getTanSlopeEquation(expr, var, val):
         # y = mx+b
         # The slope of the tangent line is just the derivative
@@ -266,7 +271,7 @@ with st.expander('Calculus'):
 
 
     @confidence(80)
-    @display()
+    @display('val = interval.start')
     def getTanSlope(expr, var, val):
         # y = mx+b
         # The slope of the tangent line is just the derivative
