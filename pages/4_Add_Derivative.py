@@ -21,11 +21,16 @@ func = _grid.text_input('Func:', ss[f'_expr0'])
 _grid.image('assets/partial_derivative.png', width=100)
 var = _grid.text_input('Var:', list(ss.vars[0].keys())[0] if len(ss.vars[0].keys()) == 1 else '')
 
+order = st.columns(2)[0].number_input('Order', 1, value=1, step=1)
+
 if (func is not None and len(func) and var is not None and len(var)):
     st.divider()
     'Copy this into the main equation:'
     left, right = st.columns([.8, .2])
-    result = f'Derivative({func}, {var})'
+    result = f'Derivative({func}, {var}'
+    if order != 1:
+        result += f', {order}'
+    result += ')'
     left.code(result)
     show_sympy(parse(result))
     if right.button('Overwrite Main Expression'):
