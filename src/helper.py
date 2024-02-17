@@ -174,28 +174,11 @@ def show_sympy(expr, to=st):
         else:
             to.write(expr)
 
-def caption(expr, vars, interval):
+def caption(expr):
     if expr is None: return
-    # "Parsed as"
-    a, b, c, d = st.columns(4)
-    a.caption(f"Parsed as: `{expr}`")
+    # a, b, c, d = st.columns(4)
+    st.caption(f"Parsed as: `{expr}`")
 
-    if len(vars) == 1:
-        var = list(vars)[0]
-        # Categories
-        try:
-            d.caption(f'Catagories: `{tuple(categorize(expr, var))}`')
-        except: pass
-
-        try:
-            c.caption('Interval Properties: `' + str(get_interval_desc(expr, var, interval)) + '`')
-        except: pass
-
-        # Min max
-        try:
-            min, max = min_max(expr, var)
-            b.caption(f'Min: {min}, Max: {max}')
-        except: pass
 
 def reset_ui():
     """ Reset all the vars and the equal box, because we have a new expression provided """

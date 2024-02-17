@@ -257,7 +257,7 @@ for i in range(num_funcs):
     var_variables[i] = v
 
     # Now add captions to each one
-    caption(expr, v, ss.interval)
+    caption(expr)
 
     # Show the expression
     show_sympy(expr)
